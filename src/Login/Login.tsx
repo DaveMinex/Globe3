@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export interface ILoginProps {
   className?: string;
 }
 
 export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
+  const navigate = useNavigate();
   const [isChecked, setIsChecked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleToggle = () => {
     setIsChecked(!isChecked);
@@ -15,7 +20,10 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
+  const onLogin = () => {
+    console.log(username, password);
+    navigate("/dashboard");
+  };
   return (
     <div className={`min-h-screen flex items-center justify-center bg-white px-2 ${className}`}>
       <div className="w-full max-w-6xl bg-[#f3f3f3] rounded-3xl shadow-[24px_48px_96px_0_rgba(0,0,0,0.22)] flex flex-row md:flex-row gap-6 overflow-hidden px-6 py-6">
@@ -96,7 +104,7 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
               </div>
             </div>
             <button
-              type="submit"
+              onClick={()=>onLogin()}
               className="w-full h-12 bg-ui-colors-blue text-white rounded-lg text-lg font-medium shadow-md hover:bg-blue-700 transition-colors"
             >
               Log In
