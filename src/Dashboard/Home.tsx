@@ -160,19 +160,20 @@ export const DashboardHome = ({
                                     </div>
                                 </div>
                                 <div className="relative top-[10px] w-full h-full">
-                                    <div className="w-[calc(43vw)] h-[calc(43vw)] mx-auto relative z-50">
+                                    <div className="w-[calc(43vw)] h-[calc(43vw)] mx-auto relative z-10">
                                         {viewMode === '3D' ? (
                                             <div className="relative">
                                                 <Globe
                                                     ref={globeRef}
                                                     globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
                                                     pointsData={locations}
-                                                    pointColor={(d: any) => d === selectedCity ? '#ff4444' : '#ffff00'}
-                                                    pointRadius={(d: any) => d === selectedCity ? 0.8 : 0.5}
+                                                    pointLat={(d: any) => d.lat}
+                                                    pointLng={(d: any) => d.lng}
+                                                    pointAltitude={0.01}
                                                     pointLabel={(d: any) => `
-                                                        <div class="bg-white p-2 rounded-lg shadow-lg">
-                                                            <div class="font-bold text-gray-800">${d.city}</div>
-                                                            <div class="text-sm text-gray-600">${d.users.toLocaleString()} users</div>
+                                                        <div class='bg-white p-2 rounded-lg shadow-lg'>
+                                                            <div class='font-bold text-gray-800'>${d.city}</div>
+                                                            <div class='text-sm text-gray-600'>${d.users.toLocaleString()} users</div>
                                                         </div>
                                                     `}
                                                     onPointClick={handlePointClick}
@@ -181,23 +182,21 @@ export const DashboardHome = ({
                                                     backgroundColor="rgba(0,0,0,0)"
                                                     atmosphereColor="rgba(255,255,255,0.2)"
                                                     atmosphereAltitude={0.1}
-                                                    particlesData={particles}
-                                                    particleColor={(d: any) => d.color}
-                                                    particleRadius={(d: any) => d.size}
-                                                    particleAltitude={0.1}
-                                                    hexPolygonsData={[]}
-                                                    hexPolygonResolution={3}
-                                                    hexPolygonMargin={0.3}
-                                                    hexPolygonColor={() => 'rgba(255,255,255,0.1)'}
-                                                    customLayerData={[]}
-                                                    customThreeObject={() => {
-                                                        const geometry = new THREE.SphereGeometry(1.01, 32, 32);
-                                                        const material = new THREE.MeshBasicMaterial({
-                                                            color: 0xffffff,
-                                                            transparent: true,
-                                                            opacity: 0.1
-                                                        });
-                                                        return new THREE.Mesh(geometry, material);
+                                                    customThreeObject={(d: any) => {
+                                                        // Create a glowing sphere
+                                                        const group = new THREE.Group();
+                                                        const geometry = new THREE.SphereGeometry(0.7, 16, 16);
+                                                        const material = new THREE.MeshBasicMaterial({ color: d === selectedCity ? 0xff4444 : 0xffff00 });
+                                                        const sphere = new THREE.Mesh(geometry, material);
+                                                        // Add glow
+                                                        const glowMaterial = new THREE.MeshBasicMaterial({ color: d === selectedCity ? 0xff4444 : 0xffff00, transparent: true, opacity: 0.3 });
+                                                        const glow = new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16), glowMaterial);
+                                                        group.add(sphere);
+                                                        group.add(glow);
+                                                        return group;
+                                                    }}
+                                                    customThreeObjectUpdate={(obj: any, d: any) => {
+                                                        obj.position.set(0, 0, 0);
                                                     }}
                                                 />
                                                 {selectedCity && (
@@ -537,13 +536,13 @@ export const DashboardHome = ({
                             </div>
                                 </div>
                                 {/* Scene 2 */}
-                                {/* <div
+                                <div
                                     ref={mainFrameRef}
-                                    className="absolute right-0 w-full h-full z-1"
+                                    className="absolute right-0 w-full h-full z-20"
                                     style={{ top: `${window.innerHeight - scrollY}px` }}
                                 >
                                     <MainFrame />
-                                </div> */}
+                                </div>
                             </div>
                         </div>
                     </div>

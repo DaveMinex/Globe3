@@ -28,33 +28,10 @@ export const IrregularAreaChart: React.FC<IrregularAreaChartProps> = ({
     },
     annotations: {
       yaxis: [
-        {
-          y: 30,
-          borderColor: '#999',
-          label: {
-            show: true,
-            text: 'Support',
-            style: {
-              color: '#fff',
-              background: '#00E396',
-            },
-          },
-        },
+        // Remove y-axis annotation for a cleaner look
       ],
       xaxis: [
-        {
-          x: new Date('14 Nov 2012').getTime(),
-          borderColor: '#999',
-          yAxisIndex: 0,
-          label: {
-            show: true,
-            text: 'Rally',
-            style: {
-              color: '#fff',
-              background: '#775DD0',
-            },
-          },
-        },
+        // Remove x-axis annotation for a cleaner look
       ],
     },
     dataLabels: {
@@ -68,6 +45,15 @@ export const IrregularAreaChart: React.FC<IrregularAreaChartProps> = ({
       type: 'datetime',
       min: new Date('01 Mar 2025').getTime(),
       tickAmount: 6,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: { style: { fontSize: '12px', colors: '#888' } },
+    },
+    yaxis: {
+      show: false,
+      labels: { show: false },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
     },
     tooltip: {
       x: {
@@ -82,6 +68,14 @@ export const IrregularAreaChart: React.FC<IrregularAreaChartProps> = ({
         opacityTo: 0.9,
         stops: [0, 100],
       },
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 4,
+      colors: ['#2196f3'],
+    },
+    grid: {
+      show: false,
     },
   };
 
