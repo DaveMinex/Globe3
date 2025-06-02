@@ -10,12 +10,17 @@ import { LogoutIcon } from "../components/sidebar/LogoutIcon";
 import { GlowingRippleDot } from "../components/GlowingRippleDot";
 import { MainFrame } from "./MainFrame";
 import Globe from 'react-globe.gl';
+import * as THREE from 'three';
 
 interface Location {
     lat: number;
     lng: number;
     city: string;
     users: number;
+    position: {
+        x: number;
+        y: number;
+    };
 }
 
 export interface IDashboardHomeProps {
@@ -32,20 +37,58 @@ export const DashboardHome = ({
     const [viewMode, setViewMode] = useState<'3D' | '2D'>('3D');
     const [scrollY, setScrollY] = useState(window.innerHeight);
     const [mainFrameHeight, setMainFrameHeight] = useState(0);
+    const [selectedCity, setSelectedCity] = useState<Location | null>(null);
     const mainFrameRef = useRef<HTMLDivElement>(null);
     const globeRef = useRef<any>();
 
     const locations: Location[] = [
-        { lat: 32.7157, lng: -117.1611, city: "San Diego", users: 140867 },
-        { lat: 40.7128, lng: -74.0060, city: "New York City", users: 3586 },
-        { lat: 29.7604, lng: -95.3698, city: "Houston", users: 24980 },
-        { lat: 34.0522, lng: -118.2437, city: "Los Angeles", users: 6354 },
-        { lat: 41.8781, lng: -87.6298, city: "Chicago", users: 10756 }
+        { 
+            lat: 32.7157, 
+            lng: -117.1611, 
+            city: "San Diego", 
+            users: 140867,
+            position: { x: 0.22, y: 0.28 }
+        },
+        { 
+            lat: 40.7128, 
+            lng: -74.0060, 
+            city: "New York City", 
+            users: 3586,
+            position: { x: 0.29, y: 0.27 }
+        },
+        { 
+            lat: 29.7604, 
+            lng: -95.3698, 
+            city: "Houston", 
+            users: 24980,
+            position: { x: 0.24, y: 0.33 }
+        },
+        { 
+            lat: 34.0522, 
+            lng: -118.2437, 
+            city: "Los Angeles", 
+            users: 6354,
+            position: { x: 0.19, y: 0.30 }
+        },
+        { 
+            lat: 41.8781, 
+            lng: -87.6298, 
+            city: "Chicago", 
+            users: 10756,
+            position: { x: 0.26, y: 0.28 }
+        }
     ];
+
+    // Generate particles for the globe
+    const particles = Array.from({ length: 1000 }, () => ({
+        lat: (Math.random() - 0.5) * 180,
+        lng: (Math.random() - 0.5) * 360,
+        size: Math.random() * 0.5 + 0.1,
+        color: ['#ffffff', '#ffff00', '#00ffff'][Math.floor(Math.random() * 3)]
+    }));
 
     useEffect(() => {
         if (globeRef.current) {
-            // Configure controls
             const controls = globeRef.current.controls();
             controls.enableZoom = true;
             controls.enablePan = true;
@@ -57,6 +100,17 @@ export const DashboardHome = ({
             controls.maxDistance = 500;
         }
     }, []);
+
+    const handlePointClick = (point: any) => {
+        setSelectedCity(point as Location);
+        if (globeRef.current) {
+            globeRef.current.pointOfView({
+                lat: point.lat,
+                lng: point.lng,
+                altitude: 2
+            }, 1000);
+        }
+    };
 
     const getMainFrameHeight = () => {
         if (mainFrameRef.current) {
@@ -108,28 +162,68 @@ export const DashboardHome = ({
                                 <div className="relative top-[10px] w-full h-full">
                                     <div className="w-[calc(43vw)] h-[calc(43vw)] mx-auto relative z-50">
                                         {viewMode === '3D' ? (
-                                            <Globe
-                                                ref={globeRef}
-                                                globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-                                                pointsData={locations}
-                                                pointColor={() => '#ffff00'}
-                                                pointRadius={0.5}
-                                                pointLabel={(d: any) => `${d.city}: ${d.users.toLocaleString()} users`}
-                                                onPointClick={(point: any) => {
-                                                    console.log(`${point.city}: ${point.users} users`);
-                                                    // Add your click handler here
-                                                }}
-                                                width={window.innerWidth * 0.43}
-                                                height={window.innerWidth * 0.43}
-                                                backgroundColor="rgba(0,0,0,0)"
-                                            />
+                                            <div className="relative">
+                                                <Globe
+                                                    ref={globeRef}
+                                                    globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+                                                    pointsData={locations}
+                                                    pointColor={(d: any) => d === selectedCity ? '#ff4444' : '#ffff00'}
+                                                    pointRadius={(d: any) => d === selectedCity ? 0.8 : 0.5}
+                                                    pointLabel={(d: any) => `
+                                                        <div class="bg-white p-2 rounded-lg shadow-lg">
+                                                            <div class="font-bold text-gray-800">${d.city}</div>
+                                                            <div class="text-sm text-gray-600">${d.users.toLocaleString()} users</div>
+                                                        </div>
+                                                    `}
+                                                    onPointClick={handlePointClick}
+                                                    width={window.innerWidth * 0.43}
+                                                    height={window.innerWidth * 0.43}
+                                                    backgroundColor="rgba(0,0,0,0)"
+                                                    atmosphereColor="rgba(255,255,255,0.2)"
+                                                    atmosphereAltitude={0.1}
+                                                    particlesData={particles}
+                                                    particleColor={(d: any) => d.color}
+                                                    particleRadius={(d: any) => d.size}
+                                                    particleAltitude={0.1}
+                                                    hexPolygonsData={[]}
+                                                    hexPolygonResolution={3}
+                                                    hexPolygonMargin={0.3}
+                                                    hexPolygonColor={() => 'rgba(255,255,255,0.1)'}
+                                                    customLayerData={[]}
+                                                    customThreeObject={() => {
+                                                        const geometry = new THREE.SphereGeometry(1.01, 32, 32);
+                                                        const material = new THREE.MeshBasicMaterial({
+                                                            color: 0xffffff,
+                                                            transparent: true,
+                                                            opacity: 0.1
+                                                        });
+                                                        return new THREE.Mesh(geometry, material);
+                                                    }}
+                                                />
+                                                {selectedCity && (
+                                                    <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg">
+                                                        <h3 className="text-lg font-bold text-gray-800">{selectedCity.city}</h3>
+                                                        <p className="text-gray-600">{selectedCity.users.toLocaleString()} users</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         ) : (
                                             <div className="earth relative w-full h-full">
-                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '25%', left: '25%' }} tooltipCity="San Diego" tooltipUsers={140867} />
-                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '48%', left: '39%' }} tooltipCity="New York City" tooltipUsers={3586} />
-                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '54%', left: '67%' }} tooltipCity="Houston" tooltipUsers={24980} />
-                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '77%', left: '52%' }} tooltipCity="Los Angeles" tooltipUsers={6354} />
-                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '75%', left: '79%' }} tooltipCity="Chicago" tooltipUsers={10756} />
+                                                {locations.map((location, index) => (
+                                                    <GlowingRippleDot 
+                                                        key={index}
+                                                        size="1.5vw" 
+                                                        style={{ 
+                                                            position: 'absolute', 
+                                                            top: `${location.position.y * 100}%`, 
+                                                            left: `${location.position.x * 100}%`,
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.3s ease'
+                                                        }} 
+                                                        tooltipCity={location.city} 
+                                                        tooltipUsers={location.users}
+                                                    />
+                                                ))}
                                             </div>
                                         )}
                                     </div>

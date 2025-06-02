@@ -46,7 +46,7 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
           <div className="text-black/60 text-left text-[12px] font-sfpro mb-6">
             Sign in to view real-time insights, player analytics, and AI reports.
           </div>
-          <form className="flex flex-col gap-4 w-full max-w-md mx-auto">
+          <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
             <div>
               <label className="block text-black font-semibold mb-1" htmlFor="email">Email address</label>
               <input
@@ -109,7 +109,7 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
             >
               Log In
             </button>
-          </form>
+          </div>
         </div>
       </div>
     </div>
