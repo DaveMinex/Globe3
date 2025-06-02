@@ -352,9 +352,9 @@ export const DashboardHome = ({
                                 </button>
                             </div>
                         </div>
-                        <div className="absolute top-0 left-0 w-full h-full">
-                            {/* <MainFrame /> */}
-                        </div>
+                        {/* <div className="absolute top-0 left-0 w-full h-full">
+                            <MainFrame />
+                        </div> */}
                     </div>
                    
 
