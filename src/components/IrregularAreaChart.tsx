@@ -24,7 +24,15 @@ export const IrregularAreaChart: React.FC<IrregularAreaChartProps> = ({
       background: "transparent",
     },
     dataLabels: { enabled: false },
-    markers: { size: 0 },
+    markers: { 
+      size: 4,
+      colors: ["#0a1844"],
+      strokeColors: "#fff",
+      strokeWidth: 2,
+      hover: {
+        size: 6
+      }
+    },
     fill: {
       type: "gradient",
       gradient: {
@@ -36,9 +44,13 @@ export const IrregularAreaChart: React.FC<IrregularAreaChartProps> = ({
       },
     },
     yaxis: {
-      show: false,
+      show: true,
       labels: {
-        style: { colors: "#8e8da4" },
+        style: { 
+          colors: "#666",
+          fontSize: '12px',
+          fontFamily: 'SfProDisplay-Medium'
+        },
         offsetX: 0,
         formatter: (val: number) => val.toLocaleString(),
       },
@@ -50,15 +62,64 @@ export const IrregularAreaChart: React.FC<IrregularAreaChartProps> = ({
       tickAmount: 8,
       labels: {
         rotate: 0,
-        rotateAlways: true,
-        style: { colors: "#8e8da4" },
+        rotateAlways: false,
+        style: { 
+          colors: "#666",
+          fontSize: '12px',
+          fontFamily: 'SfProDisplay-Medium'
+        },
+        datetimeFormatter: {
+          year: 'yyyy',
+          month: "MMM 'yy",
+          day: 'dd MMM',
+          hour: 'HH:mm'
+        }
       },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
     },
-    tooltip: { shared: true },
+    tooltip: {
+      enabled: true,
+      shared: true,
+      intersect: false,
+      x: {
+        format: 'dd MMM yyyy HH:mm'
+      },
+      y: {
+        formatter: (value: number) => value.toLocaleString()
+      },
+      style: {
+        fontSize: '12px',
+        fontFamily: 'SfProDisplay-Medium'
+      },
+      theme: 'light',
+      marker: {
+        show: true
+      }
+    },
     legend: {
       position: "top",
       horizontalAlign: "right",
       offsetX: -10,
+      labels: {
+        colors: "#666"
+      }
+    },
+    grid: {
+      show: true,
+      borderColor: '#f3f3f3',
+      strokeDashArray: 4,
+      position: 'back',
+      xaxis: {
+        lines: {
+          show: true
+        }
+      },
+      yaxis: {
+        lines: {
+          show: true
+        }
+      }
     },
     ...options,
   };

@@ -6,3 +6,8 @@
     width: 100%;
     height: 100%;
 }
+
+.apexcharts-tooltip {
+    pointer-events: auto !important;
+    z-index: 9999 !important;
+}
