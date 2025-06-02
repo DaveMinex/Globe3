@@ -5,6 +5,7 @@ import { StatCardsSection } from "../components/StatCardsSection";
 import { ApexOptions } from "apexcharts";
 import { Dropdown } from "../components/Dropdown";
 import { CircularProgressChart } from "../components/CircularProgressChart";
+import ApexCharts from "apexcharts";
 
 export interface IMainFrameProps {
     className?: string;
@@ -78,12 +79,36 @@ const chartOptions: ApexOptions = {
         enabled: false
     },
     grid: {
-        show: false
+        show: true,
+        borderColor: '#f3f3f3',
+        strokeDashArray: 4,
+        position: 'back',
+        xaxis: {
+            lines: {
+                show: true
+            }
+        },
+        yaxis: {
+            lines: {
+                show: true
+            }
+        }
     },
     xaxis: {
         type: "datetime" as const,
         labels: {
-            show: false
+            show: true,
+            style: {
+                colors: "#666",
+                fontSize: '12px',
+                fontFamily: 'SfProDisplay-Medium'
+            },
+            datetimeFormatter: {
+                year: 'yyyy',
+                month: "MMM 'yy",
+                day: 'dd MMM',
+                hour: 'HH:mm'
+            }
         },
         axisBorder: {
             show: false
@@ -93,10 +118,41 @@ const chartOptions: ApexOptions = {
         }
     },
     yaxis: {
-        show: false
+        show: true,
+        labels: {
+            show: true,
+            style: {
+                colors: "#666",
+                fontSize: '12px',
+                fontFamily: 'SfProDisplay-Medium'
+            },
+            formatter: (val: number) => val.toLocaleString()
+        },
+        axisBorder: {
+            show: false
+        },
+        axisTicks: {
+            show: false
+        }
     },
     tooltip: {
-        enabled: false
+        enabled: true,
+        shared: true,
+        intersect: false,
+        x: {
+            format: 'dd MMM yyyy HH:mm'
+        },
+        y: {
+            formatter: (value: number) => value.toLocaleString()
+        },
+        style: {
+            fontSize: '12px',
+            fontFamily: 'SfProDisplay-Medium'
+        },
+        theme: 'light',
+        marker: {
+            show: true
+        }
     }
 };
 
@@ -165,6 +221,29 @@ export const MainFrame = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const updateData = (period: string) => {
+        setActivePeriod(period);
+        switch (period) {
+            case 'this_month':
+                ApexCharts.exec(
+                    'area-datetime',
+                    'zoomX',
+                    new Date('01 Apr 2025').getTime(),
+                    new Date('30 Apr 2025').getTime()
+                );
+                break;
+            case 'last_month_period':
+                ApexCharts.exec(
+                    'area-datetime',
+                    'zoomX',
+                    new Date('01 Mar 2025').getTime(),
+                    new Date('31 Mar 2025').getTime()
+                );
+                break;
+            default:
+        }
+    };
+
     return (
         <div className="w-full bg-[#E4E4E400]">
             <div className={"bg-transparent h-[900px] max-w-[1440px] mx-auto"}>
@@ -175,7 +254,7 @@ export const MainFrame = ({
                             <div
                                 className="w-full"
                             >
-                                <div className="bg-[#e4e4e4] w-full h-[240px]  relative ">
+                                <div className="bg-[#e4e4e4] w-full    relative ">
 
                                     <div
                                         className="mt-4 flex flex-row justify-between items-start px-4 py-2"
@@ -183,15 +262,15 @@ export const MainFrame = ({
                                         <div className="flex flex-row gap-1.5 items-start justify-start w-[219px]">
                                             <div className="flex flex-col gap-0.5 items-start justify-start self-stretch shrink-0 relative w-full">
                                                 <div
-                                                    className="text-[#000000] text-left font-['SfProDisplay-Semibold',_sans-serif] text-lg font-semibold relative self-stretch"
+                                                    className="text-[#000000] text-left text-nowrap font-['SfProDisplay-Semibold',_sans-serif] text-lg font-semibold relative self-stretch"
                                                     style={{ letterSpacing: "0.01em" }}
-                                                >
+                                    >
                                                     Total Bet Amount Overview{" "}
                             </div>
                             <div
                                                     className="text-[rgba(0,0,0,0.60)] text-left font-['SfProDisplay-Medium',_sans-serif] text-[13px] font-medium relative self-stretch"
                                                     style={{ letterSpacing: "0.02em" }}
-                                                >
+                            >
                                                     Monthly Views{" "}
                         </div>
                         <div
@@ -210,7 +289,7 @@ export const MainFrame = ({
                                                         ? "linear-gradient(180deg, rgba(255,255,255,1) 0%,rgba(243,243,243,1) 100%)"
                                                         : "linear-gradient(180deg, rgba(255,255,255,1) 0%,rgba(243,243,243,1) 100%)"
                                                 }}
-                                                onClick={() => setActivePeriod("this_month")}
+                                                onClick={() => updateData("this_month")}
                                             >
                                                 <div
                                                     className="rounded-full shrink-0 w-2.5 h-2.5 relative flex items-center justify-center"
@@ -231,21 +310,21 @@ export const MainFrame = ({
                                             <button
                                                 className={`rounded-[23px] border-solid border-[rgba(0,0,0,0.20)] border-[0.6px] pt-1.5 pr-2.5 pb-1.5 pl-2.5 flex flex-row gap-1.5 items-center justify-center shrink-0 h-8 relative`}
                                         style={{
-                                                    background: activePeriod === "Some_period_last_month"
+                                                    background: activePeriod === "last_month_period"
                                                         ? "linear-gradient(180deg, rgba(255,255,255,1) 0%,rgba(243,243,243,1) 100%)"
                                                         : "linear-gradient(180deg, rgba(255,255,255,1) 0%,rgba(243,243,243,1) 100%)"
                                                 }}
-                                                onClick={() => setActivePeriod("Some_period_last_month")}
+                                                onClick={() => updateData("last_month_period")}
                                             >
-                                                <div
+                    <div
                                                     className="rounded-full shrink-0 w-2.5 h-2.5 relative flex items-center justify-center"
                                 style={{
                                                         border: "1.5px solid #c5c5c5",
                                                         background: "#fff",
                                                         aspectRatio: "1"
-                                                    }}
+                                    }}
                                                 >
-                                                    {activePeriod === "Some_period_last_month" && (
+                                                    {activePeriod === "last_month_period" && (
                                                         <div className="bg-black rounded-full w-1.5 h-1.5"></div>
                                                     )}
                                 </div>
@@ -271,12 +350,12 @@ export const MainFrame = ({
                         </div>
                                 </div>
 
-                                    <div className="chart-irregular w-full absolute top-[70px]">
+                                    <div className="chart-irregular w-full  ">
                                         <IrregularAreaChart series={chartSeries} height={180} className="w-full" options={chartOptions} />
                                 </div>
 
                             </div>
-
+ 
                                 <div className="mt-4 bg-[#e4e4e4] px-2 py-4">
                                     <div className="flex flex-row justify-between items-end justify-start ">
                             <div
@@ -536,7 +615,7 @@ export const MainFrame = ({
                                                 <div
                                                     className="text-[#000000] text-left font-['SfProDisplay-Semibold',_sans-serif] text-lg font-semibold relative"
                                                     style={{ letterSpacing: "-0.03em" }}
-                                                >
+                        >
                                                     User Registration{" "}
                                                 </div>
                                                 <div className="bg-[#0a1844] rounded-[9px] p-1.5 flex flex-row gap-0.5 items-center justify-center shrink-0 relative">
@@ -593,7 +672,7 @@ export const MainFrame = ({
                                                 />
                                             </div>
                                             <div className=" rounded-[13px] pt-2 pr-2.5 pb-2 flex flex-row gap-1">
-                                                <img
+                                    <img
                                                     className="w-[38px] h-[38px] relative overflow-visible"
                                                     src="frame19.svg"
                                     />
@@ -630,7 +709,7 @@ export const MainFrame = ({
                                                 />
                                             </div>
                                             <div className=" rounded-[13px] pt-2 pr-2.5 pb-2 flex flex-row gap-1">
-                                                <img
+                                    <img
                                                     className="w-[38px] h-[38px] relative overflow-visible"
                                         src="frame19.svg"
                                     />

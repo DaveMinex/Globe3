@@ -9,6 +9,14 @@ import { SettingsIcon } from "../components/sidebar/SettingsIcon";
 import { LogoutIcon } from "../components/sidebar/LogoutIcon";
 import { GlowingRippleDot } from "../components/GlowingRippleDot";
 import { MainFrame } from "./MainFrame";
+import Globe from 'react-globe.gl';
+
+interface Location {
+    lat: number;
+    lng: number;
+    city: string;
+    users: number;
+}
 
 export interface IDashboardHomeProps {
     className?: string;
@@ -18,24 +26,59 @@ export const DashboardHome = ({
     className,
     ...props
 }: IDashboardHomeProps): JSX.Element => {
+    const [loading, setLoading] = useState(true);
     const [hovered, setHovered] = useState<string | null>(null);
     const [active, setActive] = useState<string>("Dashboard");
     const [viewMode, setViewMode] = useState<'3D' | '2D'>('3D');
     const [scrollY, setScrollY] = useState(window.innerHeight);
     const [mainFrameHeight, setMainFrameHeight] = useState(0);
     const mainFrameRef = useRef<HTMLDivElement>(null);
+    const globeRef = useRef<any>();
+
+    const locations: Location[] = [
+        { lat: 32.7157, lng: -117.1611, city: "San Diego", users: 140867 },
+        { lat: 40.7128, lng: -74.0060, city: "New York City", users: 3586 },
+        { lat: 29.7604, lng: -95.3698, city: "Houston", users: 24980 },
+        { lat: 34.0522, lng: -118.2437, city: "Los Angeles", users: 6354 },
+        { lat: 41.8781, lng: -87.6298, city: "Chicago", users: 10756 }
+    ];
 
     useEffect(() => {
+        if (globeRef.current) {
+            // Configure controls
+            const controls = globeRef.current.controls();
+            controls.enableZoom = true;
+            controls.enablePan = true;
+            controls.enableRotate = true;
+            controls.rotateSpeed = 0.5;
+            controls.zoomSpeed = 0.5;
+            controls.panSpeed = 0.5;
+            controls.minDistance = 200;
+            controls.maxDistance = 500;
+        }
+    }, []);
+
+    const getMainFrameHeight = () => {
         if (mainFrameRef.current) {
             const height = mainFrameRef.current.scrollHeight;
             setMainFrameHeight(height);
-            console.log('MainFrame height:', height);
+            return height;
         }
+        return 0;
+    }
+
+    useEffect(() => {
+        getMainFrameHeight();
     }, []); // Run once after mount
 
     useEffect(() => {
         const handleScroll = (event: WheelEvent) => {
-            setScrollY(prev => prev + event.deltaY > mainFrameHeight ? mainFrameHeight : prev + event.deltaY < 0 ? 0 : prev + event.deltaY);
+            console.log(getMainFrameHeight());
+            if (getMainFrameHeight() === 0) return;
+            setScrollY(prev => {
+                return prev + event.deltaY
+            });
+            return
         };
         window.addEventListener("wheel", handleScroll);
         return () => window.removeEventListener("wheel", handleScroll);
@@ -45,6 +88,7 @@ export const DashboardHome = ({
         console.log(window.innerHeight)
         console.log(scrollY);
     }, [scrollY]);
+
     return (
         <div className="w-full bg-[#E4E4E4] relative overflow-hidden" >
             <div className="max-w-[1440px] mx-auto bg-white overflow-hidden">
@@ -53,23 +97,41 @@ export const DashboardHome = ({
                     <div className="relative">
                         <div className="flex flex-row bg-white m-4 gap-4 relative">
                             {/* Earth */}
-                            <div className="absolute w-full ">
+                            <div className="absolute w-full">
                                 <div className="relative">
-                                    <div className="flex justify-center mt-10  w-full h-full z-1">
+                                    <div className="flex justify-center mt-10 w-full h-full z-1">
                                         <span className="text-5xl font-semibold">
                                             Global Overview
                                         </span>
                                     </div>
                                 </div>
-                                <div className="relative top-[10px] -z-100 w-full h-full">
-                                    <div className="w-[calc(43vw)] h-[calc(43vw)] mx-auto">
-                                        <div className="earth relative w-full h-full">
-                                            <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '25%', left: '25%' }} tooltipCity="San Diego" tooltipUsers={140867} />
-                                            <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '48%', left: '39%' }} tooltipCity="New York City" tooltipUsers={3586} />
-                                            <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '54%', left: '67%' }} tooltipCity="Houston" tooltipUsers={24980} />
-                                            <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '77%', left: '52%' }} tooltipCity="Los Angeles" tooltipUsers={6354} />
-                                            <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '75%', left: '79%' }} tooltipCity="Chicago" tooltipUsers={10756} />
-                                        </div>
+                                <div className="relative top-[10px] w-full h-full">
+                                    <div className="w-[calc(43vw)] h-[calc(43vw)] mx-auto relative z-50">
+                                        {viewMode === '3D' ? (
+                                            <Globe
+                                                ref={globeRef}
+                                                globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+                                                pointsData={locations}
+                                                pointColor={() => '#ffff00'}
+                                                pointRadius={0.5}
+                                                pointLabel={(d: any) => `${d.city}: ${d.users.toLocaleString()} users`}
+                                                onPointClick={(point: any) => {
+                                                    console.log(`${point.city}: ${point.users} users`);
+                                                    // Add your click handler here
+                                                }}
+                                                width={window.innerWidth * 0.43}
+                                                height={window.innerWidth * 0.43}
+                                                backgroundColor="rgba(0,0,0,0)"
+                                            />
+                                        ) : (
+                                            <div className="earth relative w-full h-full">
+                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '25%', left: '25%' }} tooltipCity="San Diego" tooltipUsers={140867} />
+                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '48%', left: '39%' }} tooltipCity="New York City" tooltipUsers={3586} />
+                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '54%', left: '67%' }} tooltipCity="Houston" tooltipUsers={24980} />
+                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '77%', left: '52%' }} tooltipCity="Los Angeles" tooltipUsers={6354} />
+                                                <GlowingRippleDot size="1.5vw" style={{ position: 'absolute', top: '75%', left: '79%' }} tooltipCity="Chicago" tooltipUsers={10756} />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -272,7 +334,7 @@ export const DashboardHome = ({
                                                     You'll See The World Over
                                                 </span>
                                             </div>
-                                            <div>
+                                <div>
                                                 <span className="text-xl">
                                                     Active Users and <br />
                                                     Their Details.
@@ -298,15 +360,15 @@ export const DashboardHome = ({
                                                         +34%
                                                     </span>
                                                 </div>
-                                            </div>
-                                            <div>
+                                </div>
+                                <div>
                                                 <span className="text-md">
                                                     Total No. Of Bet Amounts
                                                     <br />
                                                     <span className="text-xl ">$675,98,00 </span> ~ +64%
                                                 </span>
-                                            </div>
-                                            <div>
+                                </div>
+                                <div>
                                                 <span className="text-md">
                                                     Total Withdrawal Requested
                                                     <br />
@@ -378,16 +440,16 @@ export const DashboardHome = ({
                                                 <path d="M20 16v4h-4" />
                                             </svg>
                                         </button>
-                                    </div>
+                            </div>
                                 </div>
                                 {/* Scene 2 */}
-                                <div
+                                {/* <div
                                     ref={mainFrameRef}
                                     className="absolute right-0 w-full h-full z-1"
                                     style={{ top: `${window.innerHeight - scrollY}px` }}
                                 >
                                     <MainFrame />
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>

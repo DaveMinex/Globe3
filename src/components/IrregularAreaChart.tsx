@@ -1,137 +1,140 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactApexChart from "react-apexcharts";
-import type { ApexOptions } from "apexcharts";
+import ApexCharts, { ApexOptions } from "apexcharts";
 
 interface IrregularAreaChartProps {
   series: ApexAxisChartSeries;
-  options?: ApexOptions;
   height?: number | string;
   className?: string;
 }
 
 export const IrregularAreaChart: React.FC<IrregularAreaChartProps> = ({
   series,
-  options = {},
-  height = 180,
+  height = 350,
   className = "",
 }) => {
-  const defaultOptions: ApexOptions = {
+  const [selection, setSelection] = useState('this_month');
+
+  const options: ApexOptions = {
     chart: {
-      type: "area",
-      stacked: false,
-      zoom: { enabled: false },
+      id: 'area-datetime',
+      type: 'area',
+      height: typeof height === 'number' ? height : 350,
+      zoom: {
+        autoScaleYaxis: true
+      },
       toolbar: { show: false },
-      background: "transparent",
+      background: 'transparent',
     },
-    dataLabels: { enabled: false },
-    markers: { 
-      size: 4,
-      colors: ["#0a1844"],
-      strokeColors: "#fff",
-      strokeWidth: 2,
-      hover: {
-        size: 6
-      }
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 1,
-        inverseColors: false,
-        opacityFrom: 0.45,
-        opacityTo: 0.05,
-        stops: [20, 100, 100, 100],
-      },
-    },
-    yaxis: {
-      show: true,
-      labels: {
-        style: { 
-          colors: "#666",
-          fontSize: '12px',
-          fontFamily: 'SfProDisplay-Medium'
+    annotations: {
+      yaxis: [
+        {
+          y: 30,
+          borderColor: '#999',
+          label: {
+            show: true,
+            text: 'Support',
+            style: {
+              color: '#fff',
+              background: '#00E396',
+            },
+          },
         },
-        offsetX: 0,
-        formatter: (val: number) => val.toLocaleString(),
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
+      ],
+      xaxis: [
+        {
+          x: new Date('14 Nov 2012').getTime(),
+          borderColor: '#999',
+          yAxisIndex: 0,
+          label: {
+            show: true,
+            text: 'Rally',
+            style: {
+              color: '#fff',
+              background: '#775DD0',
+            },
+          },
+        },
+      ],
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    markers: {
+      size: 0,
+      style: 'hollow',
     },
     xaxis: {
-      type: "datetime",
-      tickAmount: 8,
-      labels: {
-        rotate: 0,
-        rotateAlways: false,
-        style: { 
-          colors: "#666",
-          fontSize: '12px',
-          fontFamily: 'SfProDisplay-Medium'
-        },
-        datetimeFormatter: {
-          year: 'yyyy',
-          month: "MMM 'yy",
-          day: 'dd MMM',
-          hour: 'HH:mm'
-        }
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false }
+      type: 'datetime',
+      min: new Date('01 Mar 2025').getTime(),
+      tickAmount: 6,
     },
     tooltip: {
-      enabled: true,
-      shared: true,
-      intersect: false,
       x: {
-        format: 'dd MMM yyyy HH:mm'
+        format: 'dd MMM yyyy',
       },
-      y: {
-        formatter: (value: number) => value.toLocaleString()
-      },
-      style: {
-        fontSize: '12px',
-        fontFamily: 'SfProDisplay-Medium'
-      },
-      theme: 'light',
-      marker: {
-        show: true
-      }
     },
-    legend: {
-      position: "top",
-      horizontalAlign: "right",
-      offsetX: -10,
-      labels: {
-        colors: "#666"
-      }
-    },
-    grid: {
-      show: true,
-      borderColor: '#f3f3f3',
-      strokeDashArray: 4,
-      position: 'back',
-      xaxis: {
-        lines: {
-          show: true
-        }
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.7,
+        opacityTo: 0.9,
+        stops: [0, 100],
       },
-      yaxis: {
-        lines: {
-          show: true
-        }
-      }
     },
-    ...options,
+  };
+
+  const updateData = (period: string) => {
+    setSelection(period);
+    switch (period) {
+      case 'this_month':
+        // April 2025
+        ApexCharts.exec(
+          'area-datetime',
+          'zoomX',
+          new Date('01 Apr 2025').getTime(),
+          new Date('30 Apr 2025').getTime()
+        );
+        break;
+      case 'last_month_period':
+        // March 2025
+        ApexCharts.exec(
+          'area-datetime',
+          'zoomX',
+          new Date('01 Mar 2025').getTime(),
+          new Date('31 Mar 2025').getTime()
+        );
+        break;
+      default:
+    }
   };
 
   return (
     <div className={className}>
-      <ReactApexChart
-        options={defaultOptions}
-        series={series}
-        type="area"
-        height={height}
-      />
+      {/* <div className="toolbar mb-4 flex gap-2">
+        <button
+          onClick={() => updateData('this_month')}
+          className={`px-3 py-1 rounded-md text-sm ${
+            selection === 'this_month'
+              ? 'bg-[#0a1844] text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          This Month
+        </button>
+        <button
+          onClick={() => updateData('last_month_period')}
+          className={`px-3 py-1 rounded-md text-sm ${
+            selection === 'last_month_period'
+              ? 'bg-[#0a1844] text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Some Period Last Month
+        </button>
+      </div> */}
+      <ReactApexChart options={options} series={series} type="area" height={height} />
     </div>
   );
-}; 
+};
