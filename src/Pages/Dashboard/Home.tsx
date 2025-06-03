@@ -12,7 +12,7 @@ import { MainFrame } from "./MainFrame";
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { ThemeToggle } from "../../components/Dashboard/ThemeToggle";
-import Sidebar from "../../components/Sidebar";
+import Sidebar from "../../components/Sidebar/index";
 import { Header } from "../../components/Header";
 import { Earth } from "../../components/Dashboard/Earth";
 import { Footer } from "../../components/Dashboard/Footer";
@@ -57,34 +57,34 @@ export const DashboardHome = ({
             users: 140867,
             position: { x: 0.22, y: 0.28 }
         },
-        // {
-        //     lat: 40.7128,
-        //     lng: -74.0060,
-        //     city: "New York City",
-        //     users: 3586,
-        //     position: { x: 0.29, y: 0.27 }
-        // },
-        // {
-        //     lat: 29.7604,
-        //     lng: -95.3698,
-        //     city: "Houston",
-        //     users: 24980,
-        //     position: { x: 0.24, y: 0.33 }
-        // },
-        // {
-        //     lat: 34.0522,
-        //     lng: -118.2437,
-        //     city: "Los Angeles",
-        //     users: 6354,
-        //     position: { x: 0.19, y: 0.30 }
-        // },
-        // {
-        //     lat: 41.8781,
-        //     lng: -87.6298,
-        //     city: "Chicago",
-        //     users: 10756,
-        //     position: { x: 0.26, y: 0.28 }
-        // }
+        {
+            lat: 40.7128,
+            lng: -74.0060,
+            city: "New York City",
+            users: 3586,
+            position: { x: 0.29, y: 0.27 }
+        },
+        {
+            lat: 29.7604,
+            lng: -95.3698,
+            city: "Houston",
+            users: 24980,
+            position: { x: 0.24, y: 0.33 }
+        },
+        {
+            lat: 34.0522,
+            lng: -118.2437,
+            city: "Los Angeles",
+            users: 6354,
+            position: { x: 0.19, y: 0.30 }
+        },
+        {
+            lat: 41.8781,
+            lng: -87.6298,
+            city: "Chicago",
+            users: 10756,
+            position: { x: 0.26, y: 0.28 }
+        }
     ];
 
     // Generate particles for the globe
