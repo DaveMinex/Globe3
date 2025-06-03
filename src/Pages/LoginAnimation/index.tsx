@@ -34,7 +34,7 @@ export const LoginAnimation = ({ className, ...props }: ICoverPageProps): JSX.El
   };
 
   return (
-    <div className={` min-h-screen w-full flex items-center justify-center   px-2 bg-black ${className}`}>
+    <div className={` min-h-screen w-full flex items-center justify-center bg-black  px-2   ${className}`}>
       <div className="w-[1400px] h-[1024px] bg-[#FCFCF5] flex items-end justify-center md:flex-row gap-6 overflow-hidden px-6 py-6 main-back">
         <div className="flex flex-col items-center justify-center mb-5">
 

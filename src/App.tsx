@@ -10,7 +10,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/loginAnimation" element={<LoginAnimation />} />
+        <Route path="/" element={<LoginAnimation />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<DashboardHome />} />
         <Route path="/main" element={<MainFrame />} />
