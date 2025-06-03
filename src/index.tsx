@@ -5,12 +5,15 @@ import './vars.css';
 import './index.css';
 
 import App from "./App";
+import { ThemeProvider } from "./context/ThemeContext";
 
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 
 root.render(
   <StrictMode>
-    <App />
+    {/* <ThemeProvider> */}
+      <App />
+    {/* </ThemeProvider> */}
   </StrictMode>
 );

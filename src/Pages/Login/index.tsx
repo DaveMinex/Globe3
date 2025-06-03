@@ -26,7 +26,7 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
   };
   return (
     <div className={`min-h-screen flex items-center justify-center bg-white px-2 ${className}`}>
-      <div className="w-full max-w-6xl bg-[#f3f3f3] rounded-3xl shadow-[24px_48px_96px_0_rgba(0,0,0,0.22)] flex flex-row md:flex-row gap-6 overflow-hidden px-6 py-6">
+      <div className="w-full max-w-[1440px] bg-[#F3F3F3] rounded-3xl shadow-[24px_48px_96px_0_rgba(0,0,0,0.22)] flex flex-row md:flex-row gap-6 overflow-hidden px-6 py-6">
         {/* Left side (logo) */}
         <div className="hidden md:flex flex-col items-center justify-center w-1/2 bg-white p-8 rounded-2xl">
           <img
@@ -42,8 +42,8 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
             src="logo-adverse-02-10.png"
             alt="Adverse Logo"
           />
-          <div className="text-black text-left font-semibold text-2xl md:text-3xl mb-2">Get Started Now</div>
-          <div className="text-black/60 text-left text-[12px] font-sfpro mb-6">
+          <div className="text-black text-left text-[34px] md:text-3xl mb-2 font-sfpro font-medium">Get Started Now</div>
+          <div className="text-black/60 text-left text-[15px] font-sfpro mb-6 font-medium">
             Sign in to view real-time insights, player analytics, and AI reports.
           </div>
           <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
@@ -53,7 +53,7 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
                 id="email"
                 type="email"
                 placeholder="workmail@gmail.com"
-                className="w-full h-10 rounded-lg border border-ui-colors-blue px-4 text-base focus:outline-none focus:border-blue-600 focus:border-2 focus:ring-0 hover:shadow-lg"
+                className="w-full h-10 rounded-lg border border-ui-colors-blue px-4 font-sfpro font-medium text-[16px] text-base focus:outline-none focus:border-blue-600 focus:border-2 focus:ring-0 "
               />
             </div>
             <div>
@@ -63,7 +63,7 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="********"
-                  className="w-full h-10 rounded-lg border border-ui-colors-blue px-4 text-base focus:outline-none focus:border-blue-600 focus:border-2 focus:ring-0 shadow-sm pr-12"
+                  className="w-full h-10 rounded-lg border border-ui-colors-blue px-4 font-sfpro font-medium text-base focus:outline-none focus:border-blue-600 focus:border-2 focus:ring-0 shadow-sm pr-12"
                 />
                 <img
                   className={`w-6 h-6 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer transition-colors duration-200 ${showPassword ? 'filter' : ''}`}
@@ -93,19 +93,19 @@ export const Login = ({ className, ...props }: ILoginProps): JSX.Element => {
                 <label
                   htmlFor="terms"
                   onClick={handleToggle}
-                  className="text-[rgba(0,0,0,0.70)] text-left font-small cursor-pointer select-none"
+                  className="text-[rgba(0,0,0,0.70)] text-left font-small cursor-pointer select-none font-sfpro font-medium text-[16px]"
                 >
                   <span>I agree to the </span>
                   <span className="underline">Terms &amp; Policy</span>
                 </label>
               </div>
-              <div className="text-ui-colors-blue text-right font-small cursor-pointer select-none">
+              <div className="text-ui-colors-blue text-right font-small cursor-pointer select-none font-sfpro font-medium text-[16px]">
                 Forgot Password?
               </div>
             </div>
             <button
               onClick={()=>onLogin()}
-              className="w-full h-12 bg-ui-colors-blue text-white rounded-lg text-lg font-medium shadow-md hover:bg-blue-700 transition-colors"
+              className="w-full h-12 bg-ui-colors-blue text-white rounded-lg text-lg font-medium shadow-md hover:bg-blue-700 transition-colors font-sfpro font-medium text-[20px]"
             >
               Log In
             </button>

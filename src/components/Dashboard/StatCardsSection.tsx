@@ -1,5 +1,5 @@
 import React from "react";
-import { DashboardStatCard } from "./Dashboard/DashboardStatCard";
+import { DashboardStatCard } from "./DashboardStatCard";
 
 interface StatCardsSectionProps {
     className?: string;

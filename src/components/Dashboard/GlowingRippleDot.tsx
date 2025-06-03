@@ -58,7 +58,7 @@ export const GlowingRippleDot: React.FC<GlowingRippleDotProps> = ({
         <TooltipBox
           city={tooltipCity}
           users={tooltipUsers}
-          className={`absolute -left-12 top-[-100px] ${tooltipClassName}`}
+          className={`absolute -left-20 top-[-120px] ${tooltipClassName}`}
           style={tooltipStyle}
         />
       )}

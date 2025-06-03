@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { DashboardStatCard } from "../components/DashboardStatCard";
-import { IrregularAreaChart } from "../components/IrregularAreaChart";
-import { StatCardsSection } from "../components/StatCardsSection";
+import { DashboardStatCard } from "../../components/Dashboard/DashboardStatCard";
+import { IrregularAreaChart } from "../../components/Dashboard/IrregularAreaChart";
+import { StatCardsSection } from "../../components/Dashboard/StatCardsSection";
 import { ApexOptions } from "apexcharts";
-import { Dropdown } from "../components/Dropdown";
-import { CircularProgressChart } from "../components/CircularProgressChart";
+import { Dropdown } from "../../components/Dashboard/Dropdown";
+import { CircularProgressChart } from "../../components/Dashboard/CircularProgressChart";
 import ApexCharts from "apexcharts";
 
 export interface IMainFrameProps {
