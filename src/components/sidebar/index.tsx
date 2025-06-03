@@ -19,9 +19,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   active,
   hovered,
   setActive,
-  setHovered,
+  setHovered,   
 }) => (
-  <div className="h-[calc(100vh-40px)] w-[98px] bg-[#E4E4E4] rounded-3xl flex flex-col items-center py-4 justify-between">
+  <div className="h-[calc(100vh-40px)] w-[98px] bg-[#E4E4E4] rounded-3xl flex flex-col items-center py-4 justify-between" style={{ zIndex: 1001 }}>
     {/* Top: Logo + Home */}
     <div className="flex flex-col items-center gap-8">
       <img src="/logo.png" className="w-14 h-14 mb-2" alt="logo" />

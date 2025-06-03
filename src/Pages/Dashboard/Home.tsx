@@ -173,7 +173,7 @@ export const DashboardHome = ({
                                 active={active}
                                 hovered={hovered}
                                 setActive={setActive}
-                                setHovered={setHovered}
+                                setHovered={setHovered} 
                             />
                             {/* Main */}
                             <div className="w-full h-[calc(100vh-40px)] flex flex-col relative">
