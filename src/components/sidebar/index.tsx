@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             />
           </button>
           {hovered === "Dashboard" && (
-            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-xl bg-black text-white text-xs whitespace-nowrap z-10 flex items-center">
+            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-full bg-black text-white text-lg whitespace-nowrap z-10 flex items-center">
               <span>Dashboard</span>
             </div>
           )}
@@ -100,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             />
           </button>
           {hovered === "Company Management" && (
-            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-xl bg-black text-white text-xs whitespace-nowrap z-10 flex items-center">
+            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-full bg-black text-white text-lg whitespace-nowrap z-10 flex items-center">
               <span>Company Management</span>
             </div>
           )}
@@ -128,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             />
           </button>
           {hovered === "KYC Verifications" && (
-            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-xl bg-black text-white text-xs whitespace-nowrap z-10 flex items-center">
+            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-full bg-black text-white text-lg whitespace-nowrap z-10 flex items-center">
               <span>KYC Verifications</span>
             </div>
           )}
@@ -156,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             />
           </button>
           {hovered === "Bet Logs" && (
-            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-xl bg-black text-white text-xs whitespace-nowrap z-10 flex items-center">
+            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-full bg-black text-white text-lg whitespace-nowrap z-10 flex items-center">
               <span>Bet Logs</span>
             </div>
           )}
@@ -184,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             />
           </button>
           {hovered === "API Tokens" && (
-            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-xl bg-black text-white text-xs whitespace-nowrap z-10 flex items-center">
+            <div className="absolute left-14 top-1/3 -translate-y-1/2 px-3 py-1 rounded-full bg-black text-white text-lg whitespace-nowrap z-10 flex items-center">
               <span>API Tokens</span>
             </div>
           )}

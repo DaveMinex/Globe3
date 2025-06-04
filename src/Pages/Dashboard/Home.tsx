@@ -181,13 +181,13 @@ export const DashboardHome = ({
                                         <div className="flex flex-col gap-8">
                                             <div>
                                                 <p
-                                                    className="text-[22px] font-sfmono leading-[17px] text-black dark:text-white"
+                                                    className="text-[22px] font-sfmono leading-[17px] text-[#0071E3]"
                                                     style={{ letterSpacing: '-0.03em' }}
                                                 >
                                                     AI Powered
                                                 </p>
                                                 <p
-                                                    className="text-[22px] font-sfmono text-black dark:text-white"
+                                                    className="text-[22px] font-sfmono text-[#0071E3]"
                                                     style={{ letterSpacing: '-0.03em' }}
                                                 >
                                                     User Dashboard
@@ -208,7 +208,7 @@ export const DashboardHome = ({
                                                     </p>
                                                 </div>
                                                 <div className="mt-4">
-                                                    <p className="font-satoshi font-medium text-[22px] leading-[17px] text-black dark:text-white"
+                                                    <p className="font-satoshi font-medium text-[22px] leading-[17px] text-black dark:text-white dark:text-white"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         Active Users and

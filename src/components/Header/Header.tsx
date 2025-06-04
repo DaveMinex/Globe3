@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
                             </div>
                         </button>
                     </div>
-                    <button className="rounded-full shadow-[0_4px_24px_0_rgba(0,0,0,0.12)] p-1 bg-white dark:bg-[#232323] w-[48px] h-[48px]">
+                    <button className="rounded-full shadow-[0_4px_24px_0_rgba(0,0,0,0.12)] p-1 bg-white dark:bg-[#232323] w-[48px] h-[48px] ">
                         <img src="/ai0.png" alt="icon" className="w-full h-full rounded-full" />
                     </button>
                     <button className="bg-[#F3F3F3] dark:bg-[#F3F3F3] rounded-full p-2 shadow  w-[48px] h-[48px] flex items-center justify-center">
