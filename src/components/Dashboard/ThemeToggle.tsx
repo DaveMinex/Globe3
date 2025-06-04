@@ -48,13 +48,12 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             className={`
                 flex items-center justify-between w-[90px] h-[42px] rounded-full
                 transition-colors
-                ${theme === 'light' ? 'bg-gray-200' : 'bg-[#161616]'}
-                focus:outline-none
+                ${theme === 'light' ? 'bg-gray-200' : 'bg-[#161616]'} 
                 px-1
                 ${className}
             `}
             style={{
-                ...style,
+                // ...style,
                 transitionDuration: `${animationDuration}ms`
             }}
         >
@@ -68,11 +67,11 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
                             className={`${moveAnim === 'right' ? 'animate-move-right' : ''}`}
                         />
                     </div>
-                    <span className="text-base font-sfpro font-medium text-black pr-1">{lightLabel}</span>
+                    <span className=" font-sfpro font-medium text-[18px] text-black pr-3">{lightLabel}</span>
                 </>
             ) : (
                 <>
-                    <span className="p-1 text-base font-sfpro font-medium text-white">{darkLabel}</span>
+                    <span className="font-sfpro font-medium text-[18px] text-white pl-3 ">{darkLabel}</span>
                     <div className="bg-black rounded-full w-[32px] h-[32px] flex items-center justify-center"    >
                         <img
                             src={darkIcon}

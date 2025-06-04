@@ -16,6 +16,7 @@ import Sidebar from "../../components/sidebar";
 import { Header } from "../../components/Header";
 import { Earth } from "../../components/Dashboard/Earth";
 import { Footer } from "../../components/Dashboard/Footer";
+import { useTheme } from "../../context/ThemeContext";
 
 interface Location {
     lat: number;
@@ -43,11 +44,9 @@ export const DashboardHome = ({
     const [scrollY, setScrollY] = useState(window.innerHeight);
     const [mainFrameHeight, setMainFrameHeight] = useState(0);
     const [selectedCity, setSelectedCity] = useState<Location | null>(null);
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
-    const [toggleAnim, setToggleAnim] = useState(false);
-    const [moveAnim, setMoveAnim] = useState<'left' | 'right' | null>(null);
     const mainFrameRef = useRef<HTMLDivElement>(null);
     const globeRef = useRef<any>();
+    const { theme } = useTheme();
 
     const locations: Location[] = [
         {
@@ -151,22 +150,14 @@ export const DashboardHome = ({
         console.log(scrollY);
     }, [scrollY]);
 
-    const handleThemeToggle = () => {
-        setMoveAnim(theme === 'light' ? 'right' : 'left');
-        setTimeout(() => {
-            setTheme(theme === 'light' ? 'dark' : 'light');
-            setMoveAnim(null);
-        }, 300); // match animation duration
-    };
-
     return (
-        <div className={`w-full bg-[#E4E4E4] relative overflow-hidden ${theme === 'dark' ? 'dark' : ''}`}>
-            <div className="relative max-w-[1440px] h-[100vh] mx-auto bg-white overflow-hidden z-10">
+        <div className={`w-full relative overflow-hidden ${theme === 'dark' ? ' bg-[#161616]' : 'bg-white '}`}>
+            <div className={`relative max-w-[1440px] h-[100vh] mx-auto bg-white overflow-hidden z-10 ${theme === 'dark' ? ' bg-black' : 'bg-white '}`}>
 
                 {/* Scene 1 */}
-                <div className="w-full h-full overflow-hidden">
-                    <div className="relative">
-                        <div className="flex flex-row bg-white m-4 gap-4 relative">
+                <div className={`w-full h-full overflow-hidden  ${theme === 'dark' ? ' bg-black' : 'bg-white '}`}>
+                    <div className={`relative ${theme === 'dark' ? ' bg-black' : 'bg-white '}`}>
+                        <div className={`flex flex-row  m-4 gap-4 relative ${theme === 'dark' ? ' bg-black' : 'bg-white '}`}>
 
                             {/* Sidebar */}
                             <Sidebar
@@ -190,41 +181,39 @@ export const DashboardHome = ({
                                         <div className="flex flex-col gap-8">
                                             <div>
                                                 <p
-                                                    className="text-[22px] font-sfmono  leading-[17px]"
+                                                    className="text-[22px] font-sfmono leading-[17px] text-black dark:text-white"
                                                     style={{ letterSpacing: '-0.03em' }}
                                                 >
                                                     AI Powered
                                                 </p>
                                                 <p
-                                                    className="text-[22px] font-sfmono"
+                                                    className="text-[22px] font-sfmono text-black dark:text-white"
                                                     style={{ letterSpacing: '-0.03em' }}
                                                 >
-
                                                     User Dashboard
                                                 </p>
                                             </div>
                                             <div>
-
                                                 <div>
                                                     <p
-                                                        className="text-md font-satoshi font-medium text-[14px] leading-[17px] text-black/60"
+                                                        className="text-md font-satoshi font-medium text-[14px] leading-[17px] text-black/60 dark:text-white/70"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         Rotate The Globe
                                                     </p>
-                                                    <p className="text-md font-satoshi font-medium text-[14px] leading-[17px] text-black/60"
+                                                    <p className="text-md font-satoshi font-medium text-[14px] leading-[17px] text-black/60 dark:text-white/70"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         You'll See The World Over
                                                     </p>
                                                 </div>
                                                 <div className="mt-4">
-                                                    <p className=" font-satoshi font-medium text-[22px]  leading-[17px]"
+                                                    <p className="font-satoshi font-medium text-[22px] leading-[17px] text-black dark:text-white"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         Active Users and
                                                     </p>
-                                                    <p className=" font-satoshi font-medium text-[22px]  leading-[38px]"
+                                                    <p className="font-satoshi font-medium text-[22px] leading-[38px] text-black dark:text-white"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         Their Details.
@@ -234,23 +223,23 @@ export const DashboardHome = ({
                                         </div>
                                         <div className="flex flex-col gap-4">
                                             <div className="w-[180px]">
-                                                <p className="font-satoshi font-medium text-[38px]  leading-[39px]" style={{ letterSpacing: '-0.03em' }}>
+                                                <p className="font-satoshi font-medium text-[38px] leading-[39px] text-black dark:text-white" style={{ letterSpacing: '-0.03em' }}>
                                                     Main
                                                 </p>
-                                                <p className="font-satoshi font-medium text-[38px]  leading-[39px]" style={{ letterSpacing: '-0.03em' }}>
+                                                <p className="font-satoshi font-medium text-[38px] leading-[39px] text-black dark:text-white" style={{ letterSpacing: '-0.03em' }}>
                                                     Analytics
                                                 </p>
                                             </div>
                                             <div className="mb-4">
-                                                <div className="font-satoshi font-medium text-[18px] text-black/60" style={{ letterSpacing: '-0.03em' }}>Global Active Users</div>
+                                                <div className="font-satoshi font-medium text-[18px] text-black/60 dark:text-white/70" style={{ letterSpacing: '-0.03em' }}>Global Active Users</div>
                                                 <div className="flex items-center gap-2">
                                                     <span
-                                                        className="font-sfmono font-medium text-[22px] black-gray"
+                                                        className="font-sfmono font-medium text-[22px] black-gray text-black dark:text-white"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         14,000
                                                     </span>
-                                                    <span className="flex items-center black-gray font-sfpro font-regular text-[13px]"
+                                                    <span className="flex items-center black-gray font-sfpro font-regular text-[13px] text-black/60 dark:text-white/70"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         {/* Up arrow icon (SVG) */}
@@ -260,15 +249,15 @@ export const DashboardHome = ({
                                                 </div>
                                             </div>
                                             <div className="mb-4">
-                                                <div className="font-satoshi font-medium text-[18px] text-black/60" style={{ letterSpacing: '-0.03em' }}>Total No. Of Bet Amounts</div>
+                                                <div className="font-satoshi font-medium text-[18px] text-black/60 dark:text-white/70" style={{ letterSpacing: '-0.03em' }}>Total No. Of Bet Amounts</div>
                                                 <div className="flex items-center gap-2 justify-between">
                                                     <span
-                                                        className="font-sfmono font-medium text-[22px] black-gray"
+                                                        className="font-sfmono font-medium text-[22px] black-gray text-black dark:text-white"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         $100,000
                                                     </span>
-                                                    <span className="flex items-center black-gray font-sfpro font-regular text-[13px]"
+                                                    <span className="flex items-center black-gray font-sfpro font-regular text-[13px] text-black/60 dark:text-white/70"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         {/* Up arrow icon (SVG) */}
@@ -278,15 +267,15 @@ export const DashboardHome = ({
                                                 </div>
                                             </div>
                                             <div className="mb-4">
-                                                <div className="font-satoshi font-medium text-[18px] text-black/60" style={{ letterSpacing: '-0.03em' }}>Total Withdrawal Requested</div>
+                                                <div className="font-satoshi font-medium text-[18px] text-black/60 dark:text-white/70" style={{ letterSpacing: '-0.03em' }}>Total Withdrawal Requested</div>
                                                 <div className="flex items-center gap-2 justify-between">
                                                     <span
-                                                        className="font-sfmono font-medium text-[22px] black-gray"
+                                                        className="font-sfmono font-medium text-[22px] black-gray text-black dark:text-white"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         $1,20,000
                                                     </span>
-                                                    <span className="flex items-center black-gray font-sfpro font-regular text-[13px]"
+                                                    <span className="flex items-center black-gray font-sfpro font-regular text-[13px] text-black/60 dark:text-white/70"
                                                         style={{ letterSpacing: '-0.03em' }}
                                                     >
                                                         {/* Up arrow icon (SVG) */}

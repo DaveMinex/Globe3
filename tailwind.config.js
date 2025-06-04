@@ -1,5 +1,6 @@
 module.exports =
 {
+  darkMode: 'class',
   // Note: config only includes the used styles & variables of your selection
   content: ["./src/**/*.{html,vue,svelte,js,ts,jsx,tsx}"],
   theme: {
@@ -78,8 +79,8 @@ module.exports =
           '100%': { transform: 'translateX(40px)' },
         },
         'move-left': {
-          '0%': { transform: 'translateX(40px)' },
-          '100%': { transform: 'translateX(0)' },
+          '0%': { transform: 'translateX(0px)' },
+          '100%': { transform: 'translateX(-40px)' },
         },
       },
       animation: {

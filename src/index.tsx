@@ -12,8 +12,8 @@ const root = createRoot(rootElement);
 
 root.render(
   <StrictMode>
-    {/* <ThemeProvider> */}
+    <ThemeProvider>
       <App />
-    {/* </ThemeProvider> */}
+    </ThemeProvider>
   </StrictMode>
 );

@@ -57,16 +57,16 @@
 }
 
 .light {
-  color: #000000;
+  color: #ffffff;
   text-align: left;
   font-family: "PpNeueMontreal-Medium", sans-serif;
   font-size: 13px;
   letter-spacing: -0.03em;
   font-weight: 500;
-  position: absolute;
-  left: 43px;
-  top: 50%;
-  translate: 0 -50%;
+  /* position: absolute; */
+  /* left: 43px; */
+  /* top: 50%; */
+  /* translate: 0 -50%; */
 }
 
 
@@ -77,8 +77,8 @@
   font-size: 13px;
   letter-spacing: -0.03em;
   font-weight: 500;
-  position: absolute;
-  left: 9.47px;
-  top: 50%;
-  translate: 0 -50%;
+  /* position: absolute; */
+  /* left: 9.47px; */
+  /* top: 50%; */
+  /* translate: 0 -50%; */
 }

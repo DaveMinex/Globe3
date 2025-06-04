@@ -71,7 +71,7 @@ export const Earth: React.FC<EarthProps> = ({
               const sphere = new THREE.Mesh(geometry, material);
               // Add glow
               const glowMaterial = new THREE.MeshBasicMaterial({ color: d === selectedCity ? 0xff4444 : 0xffff00, transparent: true, opacity: 0.3 });
-              const glow = new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16), glowMaterial);
+              const glow = new THREE.Mesh(new THREE.SphereGeometry(1, 50, 50), glowMaterial);
               group.add(sphere);
               group.add(glow);
               return group;
