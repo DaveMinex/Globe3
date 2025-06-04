@@ -40,7 +40,11 @@ export const Footer: React.FC<FooterProps> = ({
               font-bold text-base`}
           >
             {/* 3D icon (replace with your SVG) */}
-            <svg className="w-5 h-5" fill="none" stroke={ theme === 'dark' ? 'white' : 'black' } strokeWidth="2" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke={
+              theme === 'dark'
+                ? (viewMode === '3D' ? 'white' : 'white')  // If 3D mode
+                : (viewMode === '3D' ? 'white' : 'black') // If 2D mode
+            } strokeWidth="2" viewBox="0 0 24 24">
               <rect x="3" y="3" width="18" height="18" rx="4" />
               <path d="M7 7l5 3 5-3" />
               <path d="M7 17V7" />
@@ -56,7 +60,11 @@ export const Footer: React.FC<FooterProps> = ({
               font-bold text-base`}
           >
             {/* 2D icon (replace with your SVG) */}
-            <svg className="w-5 h-5" fill="none" stroke={theme === 'dark' ? 'white' : 'black'} strokeWidth="2" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke={
+              theme === 'dark'
+                ? (viewMode === '2D' ? 'white' : 'white')  // If 2D mode
+                : (viewMode === '2D' ? 'white' : 'black') // If 2D mode
+            } strokeWidth="2" viewBox="0 0 24 24">
               <rect x="5" y="5" width="14" height="14" rx="2" />
               <circle cx="12" cy="12" r="3" />
               <circle cx="7" cy="7" r="1" />
