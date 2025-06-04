@@ -152,7 +152,7 @@ export const DashboardHome = ({
 
     return (
         <div className={`w-full relative overflow-hidden ${theme === 'dark' ? ' bg-[#161616]' : 'bg-white '}`}>
-            <div className={`relative max-w-[1440px] h-[100vh] mx-auto bg-white overflow-hidden z-10 ${theme === 'dark' ? ' bg-black' : 'bg-white '}`}>
+            <div className={`relative   h-[100vh] mx-auto bg-white overflow-hidden z-10 ${theme === 'dark' ? ' bg-black' : 'bg-white '}`}>
 
                 {/* Scene 1 */}
                 <div className={`w-full h-full overflow-hidden  ${theme === 'dark' ? ' bg-black' : 'bg-white '}`}>
