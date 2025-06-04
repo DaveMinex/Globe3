@@ -176,7 +176,7 @@ export const DashboardHome = ({
                                     className="z-20 relative"
                                 />
                                 {/* description */}
-                                <div className="flex flex-row mt-16 w-full relative">
+                                <div className="flex flex-row mt-16 w-full relative select-none">
                                     <div className="flex flex-row justify-between w-full px-4">
                                         <div className="flex flex-col gap-8">
                                             <div>
