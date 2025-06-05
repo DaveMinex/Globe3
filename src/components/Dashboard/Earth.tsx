@@ -88,7 +88,7 @@ export const Earth: React.FC<EarthProps> = ({
   };
 
   // Only show user points when zoomed in (e.g., zoom >= 10)
-  const visiblePoints = clusters.filter(d => d.isCluster || zoom >= 12);
+  const visiblePoints = clusters.filter(d => d.isCluster || zoom >= 10);
 
   return (
     <div className={`w-full h-[100vh] z-0 relative  translate-x-[-60px] ${viewMode === '2D' ? 'pointer-events-none' : ''}`}>
@@ -112,7 +112,7 @@ export const Earth: React.FC<EarthProps> = ({
               return 'yellow';
             }}
             pointRadius={(d: any) => (d.isCluster ? 0.2 : 0.08)}
-            onPointClick={(point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => handlePointClick(point, event, coords)}
+            onPointClick={(point: any) => handlePointClick(point)}
             width={window.innerWidth * 1}
             height={window.innerHeight * 1}
             backgroundColor="rgba(0,0,0,0)"
