@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { GlowingRippleDot } from "./GlowingRippleDot";
+import { createClusterer, getClusters, ClusterFeature } from '../../utils/clusterUsers';
+import { usersWithinRadius } from '../../utils/geo';
 
 interface Location {
   lat: number;
@@ -29,16 +31,64 @@ export const Earth: React.FC<EarthProps> = ({
   onPointClick,
   globeRef,
 }) => {
+  const [clusters, setClusters] = useState<ClusterFeature[]>([]);
+  const [clusterer, setClusterer] = useState<any>(null);
+  const [zoom, setZoom] = useState(1);
+  const [highlightedUsers, setHighlightedUsers] = useState<Location[]>([]);
+
+  // Create clusterer on mount or when locations change
   useEffect(() => {
-    if (viewMode === '3D' && globeRef.current) {
-      globeRef.current.pointOfView({
-        lat: 39.8283,
-        lng: -98.5795,
-        altitude: 1.8,
-        rotation: 0
-      }, 1000); // 1000ms for smooth transition
+    const c = createClusterer(locations);
+    setClusterer(c);
+  }, [locations]);
+
+  // Update clusters on zoom or move
+  const updateClusters = () => {
+    if (!globeRef.current || !clusterer) return;
+    // Get globe bounds (approximate)
+    const bounds: [number, number, number, number] = [-180, -85, 180, 85];
+    setClusters(getClusters(clusterer, bounds, zoom));
+  };
+
+  useEffect(() => {
+    updateClusters();
+  }, [zoom, clusterer]);
+
+  // Listen to zoom changes
+  useEffect(() => {
+    if (!globeRef.current) return;
+    const controls = globeRef.current.controls();
+    controls.enableZoom = true;
+    controls.minDistance = 1.8;
+    controls.maxDistance = 500;
+    const handleChange = () => {
+      // Map camera distance to a zoom level (0-16)
+      const minDist = 1.8, maxDist = 500;
+      const dist = controls.getDistance();
+      const zoomLevel = Math.max(0, Math.min(16, Math.round(16 - 16 * ((dist - minDist) / (maxDist - minDist)))));
+      setZoom(zoomLevel);
+    };
+    controls.addEventListener('change', handleChange);
+    return () => controls.removeEventListener('change', handleChange);
+  }, [globeRef]);
+
+  // Handle point click (cluster or user)
+  const handlePointClick = (point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
+    if (point.isCluster && clusterer) {
+      // Zoom in to cluster
+      if (globeRef.current) {
+        globeRef.current.pointOfView({ lat: point.lat, lng: point.lng, altitude: 0.8 }, 1000);
+      }
+    } else if (!point.isCluster) {
+      // Highlight users within 20 meters
+      const usersNearby = usersWithinRadius(locations, { lat: point.lat, lng: point.lng }, 20);
+      setHighlightedUsers(usersNearby);
+      onPointClick(point.properties);
     }
-  }, [viewMode, globeRef]);
+  };
+
+  // Only show user points when zoomed in (e.g., zoom >= 10)
+  const visiblePoints = clusters.filter(d => d.isCluster || zoom >= 12);
 
   return (
     <div className={`w-full h-[100vh] z-0 relative  translate-x-[-60px] ${viewMode === '2D' ? 'pointer-events-none' : ''}`}>
@@ -47,33 +97,46 @@ export const Earth: React.FC<EarthProps> = ({
           <Globe
             ref={globeRef}
             globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-            pointsData={locations}
+            pointsData={visiblePoints}
             pointLat={(d: any) => d.lat}
             pointLng={(d: any) => d.lng}
-            pointAltitude={0.01}
-            pointLabel={(d: any) => `
-              <div class='bg-white p-2 rounded-lg shadow-lg'>
-                <div class='font-bold text-gray-800'>${d.city}</div>
-                <div class='text-sm text-gray-600'>${d.users.toLocaleString()} users</div>
-              </div>
-            `}
-            onPointClick={onPointClick}
+            pointAltitude={0.001}
+            pointLabel={(d: any) =>
+              d.isCluster
+                ? `<div class='bg-white p-2 rounded-lg shadow-lg'><div class='font-bold text-gray-800'>${d.count} users</div></div>`
+                : `<div class='bg-white p-2 rounded-lg shadow-lg'><div class='font-bold text-gray-800'>${d.properties.city}</div><div class='text-sm text-gray-600'>${d.properties.users} users</div></div>`
+            }
+            pointColor={(d: any) => {
+              if (d.isCluster) return 'red';
+              if (highlightedUsers.some(u => u.lat === d.lat && u.lng === d.lng)) return 'lime';
+              return 'yellow';
+            }}
+            pointRadius={(d: any) => (d.isCluster ? 0.2 : 0.08)}
+            onPointClick={(point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => handlePointClick(point, event, coords)}
             width={window.innerWidth * 1}
             height={window.innerHeight * 1}
             backgroundColor="rgba(0,0,0,0)"
             atmosphereColor="rgba(255, 255, 255, 0.2)"
             atmosphereAltitude={0.1}
             customThreeObject={(d: any) => {
-              // Create a glowing sphere
+              // Create a glowing sphere or cluster marker
               const group = new THREE.Group();
-              const geometry = new THREE.SphereGeometry(0.7, 16, 16);
-              const material = new THREE.MeshBasicMaterial({ color: d === selectedCity ? 0xff4444 : 0xffff00 });
-              const sphere = new THREE.Mesh(geometry, material);
-              // Add glow
-              const glowMaterial = new THREE.MeshBasicMaterial({ color: d === selectedCity ? 0xff4444 : 0xffff00, transparent: true, opacity: 0.3 });
-              const glow = new THREE.Mesh(new THREE.SphereGeometry(1, 50, 50), glowMaterial);
-              group.add(sphere);
-              group.add(glow);
+              if (d.isCluster) {
+                const geometry = new THREE.SphereGeometry(1, 32, 32);
+                const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                const sphere = new THREE.Mesh(geometry, material);
+                group.add(sphere);
+              } else {
+                const geometry = new THREE.SphereGeometry(0.7, 16, 16);
+                const color = highlightedUsers.some(u => u.lat === d.lat && u.lng === d.lng) ? 0x00ff00 : (d === selectedCity ? 0xff4444 : 0xffff00);
+                const material = new THREE.MeshBasicMaterial({ color });
+                const sphere = new THREE.Mesh(geometry, material);
+                // Add glow
+                const glowMaterial = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.3 });
+                const glow = new THREE.Mesh(new THREE.SphereGeometry(1, 50, 50), glowMaterial);
+                group.add(sphere);
+                group.add(glow);
+              }
               return group;
             }}
             customThreeObjectUpdate={(obj: any, d: any) => {

@@ -1,22 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
-import { HomeIcon } from "../../components/sidebar/HomeIcon";
-import { DashboardIcon } from "../../components/sidebar/DashboardIcon";
-import { CompanyIcon } from "../../components/sidebar/CompanyIcon";
-import { KycIcon } from "../../components/sidebar/KycIcon";
-import { BetLogsIcon } from "../../components/sidebar/BetLogsIcon";
-import { ApiIcon } from "../../components/sidebar/ApiIcon";
-import { SettingsIcon } from "../../components/sidebar/SettingsIcon";
-import { LogoutIcon } from "../../components/sidebar/LogoutIcon";
-import { GlowingRippleDot } from "../../components/Dashboard/GlowingRippleDot";
-import { MainFrame } from "./MainFrame";
-import Globe from 'react-globe.gl';
-import * as THREE from 'three';
-import { ThemeToggle } from "../../components/Dashboard/ThemeToggle";
+import React, { useState, useEffect, useRef } from "react"; 
 import Sidebar from "../../components/sidebar";
 import { Header } from "../../components/Header";
 import { Earth } from "../../components/Dashboard/Earth";
 import { Footer } from "../../components/Dashboard/Footer";
 import { useTheme } from "../../context/ThemeContext";
+import { mockLocations } from '../../mock/mockLocations';
 
 interface Location {
     lat: number;
@@ -48,43 +36,7 @@ export const DashboardHome = ({
     const globeRef = useRef<any>();
     const { theme } = useTheme();
 
-    const locations: Location[] = [
-        {
-            lat: 32.7157,
-            lng: -117.1611,
-            city: "San Diego",
-            users: 140867,
-            position: { x: 0.22, y: 0.28 }
-        },
-        {
-            lat: 40.7128,
-            lng: -74.0060,
-            city: "New York City",
-            users: 3586,
-            position: { x: 0.29, y: 0.27 }
-        },
-        {
-            lat: 29.7604,
-            lng: -95.3698,
-            city: "Houston",
-            users: 24980,
-            position: { x: 0.24, y: 0.33 }
-        },
-        {
-            lat: 34.0522,
-            lng: -118.2437,
-            city: "Los Angeles",
-            users: 6354,
-            position: { x: 0.19, y: 0.30 }
-        },
-        {
-            lat: 41.8781,
-            lng: -87.6298,
-            city: "Chicago",
-            users: 10756,
-            position: { x: 0.26, y: 0.28 }
-        }
-    ];
+    const locations = mockLocations;
 
     // Generate particles for the globe
     const particles = Array.from({ length: 1000 }, () => ({
@@ -288,7 +240,7 @@ export const DashboardHome = ({
                                     </div>
                                 </div>
                                 {/* Earth */}
-                                <div className={`absolute top-[40px] w-full h-full z-0 ${viewMode === '2D' ? 'pointer-events-none' : ''}`}>
+                                <div className={`absolute w-full h-full z-0 ${viewMode === '2D' ? 'pointer-events-none' : ''}`}>
                                     <div className="w-full h-full flex justify-center items-center">
                                         <Earth
                                             viewMode={viewMode}
