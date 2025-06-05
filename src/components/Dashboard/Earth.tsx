@@ -47,10 +47,14 @@ export const Earth: React.FC<EarthProps> = ({
     if (!globeRef.current || !clusterer) return;
     // Get globe bounds (approximate)
     const bounds: [number, number, number, number] = [-180, -85, 180, 85];
-    setClusters(getClusters(clusterer, bounds, zoom));
+    console.log('Updating clusters with zoom:', zoom);
+    const newClusters = getClusters(clusterer, bounds, zoom);
+    console.log('New clusters:', newClusters);
+    setClusters(newClusters);
   };
 
   useEffect(() => {
+    console.log('Zoom changed to:', zoom);
     updateClusters();
   }, [zoom, clusterer]);
 
@@ -58,19 +62,47 @@ export const Earth: React.FC<EarthProps> = ({
   useEffect(() => {
     if (!globeRef.current) return;
     const controls = globeRef.current.controls();
-    controls.enableZoom = true;
-    controls.minDistance = 1.8;
-    controls.maxDistance = 500;
-    const handleChange = () => {
-      // Map camera distance to a zoom level (0-16)
-      const minDist = 1.8, maxDist = 500;
-      const dist = controls.getDistance();
-      const zoomLevel = Math.max(0, Math.min(16, Math.round(16 - 16 * ((dist - minDist) / (maxDist - minDist)))));
-      setZoom(zoomLevel);
+    controls.enableZoom = false;
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const delta = event.deltaY;
+      
+      // Get current point of view
+      const currentPOV = globeRef.current.pointOfView();
+      const currentAltitude = currentPOV.altitude || 2.5;
+      
+      // Calculate new altitude with custom scaling
+      const zoomFactor = delta > 0 ? 1.2 : 0.8;
+      const newAltitude = Math.max(0.2, Math.min(3, currentAltitude * zoomFactor));
+      
+      // Update point of view with custom animation
+      globeRef.current.pointOfView({
+        ...currentPOV,
+        altitude: newAltitude
+      }, 100); // Quick animation
+      
+      // Calculate zoom level with custom mapping
+      const zoomLevel = Math.round(20 * (1 - Math.log(newAltitude) / Math.log(3)));
+      setZoom(Math.max(0, Math.min(20, zoomLevel)));
     };
-    controls.addEventListener('change', handleChange);
-    return () => controls.removeEventListener('change', handleChange);
+
+    const globeElement = globeRef.current.renderer().domElement;
+    globeElement.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      globeElement.removeEventListener('wheel', handleWheel);
+    };
   }, [globeRef]);
+
+  // Update clusters whenever zoom changes
+  useEffect(() => {
+    if (!clusterer) return;
+    const bounds: [number, number, number, number] = [-180, -85, 180, 85];
+    const newClusters = getClusters(clusterer, bounds, zoom);
+    console.log('Zoom level:', zoom, 'Clusters:', newClusters.length);
+    setClusters(newClusters);
+  }, [zoom, clusterer]);
 
   // Handle point click (cluster or user)
   const handlePointClick = (point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
@@ -112,7 +144,7 @@ export const Earth: React.FC<EarthProps> = ({
               return 'yellow';
             }}
             pointRadius={(d: any) => (d.isCluster ? 0.2 : 0.08)}
-            onPointClick={(point: any) => handlePointClick(point)}
+            onPointClick={(point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => handlePointClick(point, event, coords)}
             width={window.innerWidth * 1}
             height={window.innerHeight * 1}
             backgroundColor="rgba(0,0,0,0)"

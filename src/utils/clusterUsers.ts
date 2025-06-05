@@ -12,6 +12,7 @@ export interface ClusterFeature {
 }
 
 export function createClusterer(locations: Location[]) {
+  console.log('Creating clusterer with locations:', locations.length);
   const points = locations.map((loc, i) => ({
     type: "Feature" as const,
     geometry: {
@@ -25,17 +26,30 @@ export function createClusterer(locations: Location[]) {
   }));
 
   const clusterer = new Supercluster({
-    radius: 60, // cluster radius in pixels
-    maxZoom: 16, // max zoom to cluster points on
+    radius: 20, // Much smaller radius for finer clustering
+    maxZoom: 20,
+    minZoom: 0,
+    nodeSize: 32, // Smaller node size for better precision
+    extent: 1024, // Larger extent for better precision
+    reduce: (acc, props) => {
+      acc.point_count = (acc.point_count || 0) + 1;
+    },
+    map: (props) => ({
+      point_count: 1
+    })
   });
 
   clusterer.load(points);
-
+  console.log('Clusterer created with points:', points.length);
   return clusterer;
-}
+} 
 
 export function getClusters(clusterer: Supercluster, bounds: [number, number, number, number], zoom: number): ClusterFeature[] {
-  const clusters = clusterer.getClusters(bounds, Math.round(zoom));
+  console.log('Getting clusters for zoom:', zoom);
+  // Force zoom level to be at least the requested level
+  const effectiveZoom = Math.max(zoom, 20);
+  const clusters = clusterer.getClusters(bounds, Math.round(effectiveZoom));
+  console.log('Raw clusters:', clusters.length);
   return clusters.map((c: any) => {
     if (c.properties.cluster) {
       return {
