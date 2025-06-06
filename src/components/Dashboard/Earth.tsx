@@ -40,8 +40,8 @@ export const Earth: React.FC<EarthProps> = ({
   // Create clusterer on mount or when locations change
   useEffect(() => {
     const clusterer = new Supercluster({
-      radius: 120, // Moderate cluster radius
-      maxZoom: 12, // Allow clustering up to higher zoom levels
+      radius: 200, // Increased cluster radius for better grouping
+      maxZoom: 6, // Lower max zoom to force more clustering
       minZoom: 0,
       nodeSize: 64,
       extent: 512,
@@ -135,8 +135,8 @@ export const Earth: React.FC<EarthProps> = ({
       const maxAlt = 5;
       const clampedAltitude = Math.max(minAlt, Math.min(maxAlt, newAltitude));
       const normalizedAltitude = (clampedAltitude - minAlt) / (maxAlt - minAlt);
-      const zoomLevel = Math.round(12 * (1 - normalizedAltitude)); // Scale to 0-12 to match maxZoom
-      const finalZoom = Math.max(0, Math.min(12, zoomLevel));
+      const zoomLevel = Math.round(6 * (1 - normalizedAltitude)); // Scale to 0-6 to match maxZoom
+      const finalZoom = Math.max(0, Math.min(6, zoomLevel));
       console.log('Altitude:', newAltitude, 'Normalized:', normalizedAltitude, 'Zoom:', finalZoom);
       setZoom(finalZoom);
       
