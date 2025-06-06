@@ -27,8 +27,8 @@ export function createClusterer(locations: Location[]) {
   }));
 
   const clusterer = new Supercluster({
-    radius: 50, // Balanced cluster radius for optimal clustering
-    maxZoom: 18, // Extended zoom levels for granular control
+    radius: 1000, // 20x larger cluster radius for aggressive clustering
+    maxZoom: 16, // Reduced max zoom to force more clustering
     minZoom: 0,
     minPoints: 2, // Minimum points to form a cluster
     nodeSize: 64,

@@ -44,7 +44,7 @@ export const Earth: React.FC<EarthProps> = ({
     setClusterer(newClusterer);
   }, [locations]);
 
-  // Calculate appropriate bounds based on camera position and altitude with wider range
+  // Calculate appropriate bounds based on camera position and altitude with much wider range
   const calculateBounds = (): [number, number, number, number] => {
     if (!globeRef.current) return [-180, -85, 180, 85];
     
@@ -53,36 +53,40 @@ export const Earth: React.FC<EarthProps> = ({
     const centerLat = pov.lat || 0;
     const centerLng = pov.lng || 0;
     
-    // Much wider bounds calculation for better cluster visibility
+    // Much more aggressive bounds calculation for maximum cluster visibility
     let latRange, lngRange;
     
-    if (altitude > 3) {
+    if (altitude > 2.5) {
       // Global view - show entire world
       return [-180, -85, 180, 85];
-    } else if (altitude > 2) {
-      // Continental view - very wide range
-      latRange = 60 + (altitude - 2) * 30; // 60-90 degrees
-      lngRange = 80 + (altitude - 2) * 40; // 80-120 degrees
     } else if (altitude > 1.5) {
-      // Regional view - large range
-      latRange = 40 + (altitude - 1.5) * 40; // 40-60 degrees
-      lngRange = 60 + (altitude - 1.5) * 40; // 60-80 degrees
-    } else if (altitude > 1) {
-      // Country view - medium range
-      latRange = 20 + (altitude - 1) * 40; // 20-40 degrees
-      lngRange = 30 + (altitude - 1) * 60; // 30-60 degrees
+      // Continental view - extremely wide range
+      latRange = 90; // Full latitude range
+      lngRange = 120; // Very wide longitude range
+    } else if (altitude > 1.0) {
+      // Regional view - very large range
+      latRange = 70 + (altitude - 1.0) * 40; // 70-90 degrees
+      lngRange = 90 + (altitude - 1.0) * 60; // 90-120 degrees
+    } else if (altitude > 0.7) {
+      // Country view - large range
+      latRange = 50 + (altitude - 0.7) * 66.67; // 50-70 degrees
+      lngRange = 70 + (altitude - 0.7) * 66.67; // 70-90 degrees
     } else if (altitude > 0.5) {
-      // State/Province view
-      latRange = 8 + (altitude - 0.5) * 24; // 8-20 degrees
-      lngRange = 12 + (altitude - 0.5) * 36; // 12-30 degrees
+      // State/Province view - medium-large range
+      latRange = 30 + (altitude - 0.5) * 100; // 30-50 degrees
+      lngRange = 40 + (altitude - 0.5) * 150; // 40-70 degrees
     } else if (altitude > 0.3) {
-      // City view
-      latRange = 3 + (altitude - 0.3) * 25; // 3-8 degrees
-      lngRange = 5 + (altitude - 0.3) * 35; // 5-12 degrees
+      // City view - medium range
+      latRange = 15 + (altitude - 0.3) * 75; // 15-30 degrees
+      lngRange = 20 + (altitude - 0.3) * 100; // 20-40 degrees
+    } else if (altitude > 0.2) {
+      // District view - smaller range
+      latRange = 8 + (altitude - 0.2) * 70; // 8-15 degrees
+      lngRange = 12 + (altitude - 0.2) * 80; // 12-20 degrees
     } else {
-      // Neighborhood view - still quite wide
-      latRange = 1 + altitude * 6.67; // 1-3 degrees
-      lngRange = 1.5 + altitude * 11.67; // 1.5-5 degrees
+      // Neighborhood view - focused range
+      latRange = 3 + altitude * 25; // 3-8 degrees
+      lngRange = 5 + altitude * 35; // 5-12 degrees
     }
     
     return [
@@ -141,30 +145,36 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: newAltitude
       }, 100);
 
-      // Progressive zoom level mapping for optimal clustering
+      // Aggressive clustering - prioritize clusters over individual users
       let zoomLevel;
-      if (newAltitude > 4) {
+      if (newAltitude > 3) {
         zoomLevel = 0; // Global clustering - maximum clustering
-      } else if (newAltitude > 3) {
-        zoomLevel = 2; // Continental clustering
       } else if (newAltitude > 2.5) {
-        zoomLevel = 4; // Country clustering
+        zoomLevel = 1; // Continental clustering - very high clustering
       } else if (newAltitude > 2) {
-        zoomLevel = 6; // Regional clustering
+        zoomLevel = 2; // Large regional clustering
       } else if (newAltitude > 1.5) {
-        zoomLevel = 8; // State/Province clustering
-      } else if (newAltitude > 1) {
-        zoomLevel = 10; // City clustering
-      } else if (newAltitude > 0.7) {
-        zoomLevel = 12; // District clustering
-      } else if (newAltitude > 0.5) {
-        zoomLevel = 14; // Neighborhood clustering
+        zoomLevel = 3; // Regional clustering
+      } else if (newAltitude > 1.2) {
+        zoomLevel = 4; // Country clustering
+      } else if (newAltitude > 1.0) {
+        zoomLevel = 5; // State/Province clustering
+      } else if (newAltitude > 0.8) {
+        zoomLevel = 6; // Large city clustering
+      } else if (newAltitude > 0.6) {
+        zoomLevel = 7; // City clustering
+      } else if (newAltitude > 0.4) {
+        zoomLevel = 8; // District clustering
       } else if (newAltitude > 0.3) {
-        zoomLevel = 16; // Street clustering
+        zoomLevel = 9; // Neighborhood clustering
+      } else if (newAltitude > 0.2) {
+        zoomLevel = 10; // Street clustering
       } else if (newAltitude > 0.15) {
-        zoomLevel = 18; // Block clustering - minimal clustering
+        zoomLevel = 12; // Block clustering
+      } else if (newAltitude > 0.1) {
+        zoomLevel = 14; // Detailed clustering
       } else {
-        zoomLevel = 20; // Individual points only
+        zoomLevel = 16; // Final clustering level - users only at very close zoom
       }
       
       console.log('Altitude:', newAltitude.toFixed(3), 'Zoom level:', zoomLevel);
@@ -213,24 +223,30 @@ export const Earth: React.FC<EarthProps> = ({
     };
   }, [clusterer, zoom]);
 
-  // Handle point click
+  // Handle point click with improved cluster expansion
   const handlePointClick = (point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
     if (point.isCluster && clusterer) {
       // Get expansion zoom for this cluster
       const expansionZoom = getClusterExpansionZoom(clusterer, point.id);
       
-      // Calculate appropriate altitude for the expansion zoom
+      // Calculate appropriate altitude for the expansion zoom with better mapping
       let targetAltitude;
-      if (expansionZoom <= 2) {
-        targetAltitude = 2.5;
+      if (expansionZoom <= 1) {
+        targetAltitude = 2.0;
+      } else if (expansionZoom <= 3) {
+        targetAltitude = 1.5;
       } else if (expansionZoom <= 5) {
-        targetAltitude = 1.2;
-      } else if (expansionZoom <= 8) {
-        targetAltitude = 0.8;
-      } else if (expansionZoom <= 11) {
+        targetAltitude = 1.0;
+      } else if (expansionZoom <= 7) {
+        targetAltitude = 0.7;
+      } else if (expansionZoom <= 9) {
         targetAltitude = 0.5;
-      } else {
+      } else if (expansionZoom <= 11) {
         targetAltitude = 0.3;
+      } else if (expansionZoom <= 13) {
+        targetAltitude = 0.2;
+      } else {
+        targetAltitude = 0.15;
       }
       
       // Zoom to cluster
@@ -249,50 +265,60 @@ export const Earth: React.FC<EarthProps> = ({
     }
   };
 
-  // Create enhanced Google Maps-style cluster markers
+  // Create enhanced Google Maps-style cluster markers with better scaling
   const createClusterMarker = (cluster: ClusterFeature) => {
     const group = new THREE.Group();
     
-    // Determine cluster size and color based on count with better scaling
+    // Determine cluster size and color based on count with improved scaling
     const count = cluster.count || 0;
     const totalUsers = cluster.properties?.totalUsers || count;
     let size, color, textColor, borderColor;
     
-    // More nuanced size and color scaling
-    if (count < 5) {
-      size = 0.8;
-      color = 0x4285f4; // Google blue
-      borderColor = 0x1a73e8;
-      textColor = '#ffffff';
-    } else if (count < 10) {
+    // Enhanced size and color scaling for better visual hierarchy
+    if (count < 3) {
       size = 1.0;
       color = 0x4285f4; // Google blue
       borderColor = 0x1a73e8;
       textColor = '#ffffff';
-    } else if (count < 50) {
+    } else if (count < 10) {
       size = 1.3;
+      color = 0x4285f4; // Google blue
+      borderColor = 0x1a73e8;
+      textColor = '#ffffff';
+    } else if (count < 25) {
+      size = 1.6;
+      color = 0x4285f4; // Google blue
+      borderColor = 0x1a73e8;
+      textColor = '#ffffff';
+    } else if (count < 50) {
+      size = 2.0;
       color = 0xea4335; // Google red
       borderColor = 0xd93025;
       textColor = '#ffffff';
     } else if (count < 100) {
-      size = 1.6;
+      size = 2.4;
       color = 0xea4335; // Google red
       borderColor = 0xd93025;
       textColor = '#ffffff';
+    } else if (count < 250) {
+      size = 2.8;
+      color = 0xfbbc04; // Google yellow
+      borderColor = 0xf9ab00;
+      textColor = '#000000';
     } else if (count < 500) {
-      size = 2.0;
+      size = 3.2;
       color = 0xfbbc04; // Google yellow
       borderColor = 0xf9ab00;
       textColor = '#000000';
     } else if (count < 1000) {
-      size = 2.4;
-      color = 0xfbbc04; // Google yellow
-      borderColor = 0xf9ab00;
-      textColor = '#000000';
-    } else {
-      size = 2.8;
+      size = 3.6;
       color = 0x34a853; // Google green
       borderColor = 0x137333;
+      textColor = '#ffffff';
+    } else {
+      size = 4.0;
+      color = 0x9c27b0; // Purple for massive clusters
+      borderColor = 0x7b1fa2;
       textColor = '#ffffff';
     }
     
@@ -429,16 +455,18 @@ export const Earth: React.FC<EarthProps> = ({
             pointRadius={(d: any) => {
               if (d.isCluster) {
                 const count = d.count || 0;
-                // Progressive radius scaling for clusters
-                if (count < 5) return 0.08;
-                if (count < 10) return 0.12;
-                if (count < 50) return 0.16;
-                if (count < 100) return 0.20;
-                if (count < 500) return 0.25;
-                if (count < 1000) return 0.30;
-                return 0.35;
+                // Enhanced radius scaling for better cluster visibility
+                if (count < 3) return 0.10;
+                if (count < 10) return 0.14;
+                if (count < 25) return 0.18;
+                if (count < 50) return 0.22;
+                if (count < 100) return 0.26;
+                if (count < 250) return 0.30;
+                if (count < 500) return 0.35;
+                if (count < 1000) return 0.40;
+                return 0.45; // Massive clusters
               }
-              return 0.04; // Individual users
+              return 0.05; // Individual users - slightly larger
             }}
             onPointClick={handlePointClick}
             width={window.innerWidth}
