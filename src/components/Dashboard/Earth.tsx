@@ -37,6 +37,7 @@ export const Earth: React.FC<EarthProps> = ({
   const [clusterer, setClusterer] = useState<any>(null);
   const [zoom, setZoom] = useState(2);
   const [highlightedUsers, setHighlightedUsers] = useState<Location[]>([]);
+  const [selectedPoint, setSelectedPoint] = useState<ClusterFeature | null>(null);
 
   // Create clusterer on mount or when locations change
   useEffect(() => {
@@ -285,6 +286,9 @@ export const Earth: React.FC<EarthProps> = ({
 
   // Handle point click with improved cluster expansion
   const handlePointClick = (point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
+    // Set the selected point for targeting effect
+    setSelectedPoint(point);
+    
     if (point.isCluster && clusterer) {
       // Get expansion zoom for this cluster
       const expansionZoom = getClusterExpansionZoom(clusterer, point.id);
@@ -498,6 +502,13 @@ export const Earth: React.FC<EarthProps> = ({
       group.add(numberSprite);
     }
     
+    // Add targeting box effect if this cluster is selected
+    const isTargeted = selectedPoint && selectedPoint.id === cluster.id && selectedPoint.isCluster;
+    if (isTargeted) {
+      const targetingBox = createTargetingBox(size * 3);
+      group.add(targetingBox);
+    }
+    
     return group;
   };
 
@@ -506,6 +517,7 @@ export const Earth: React.FC<EarthProps> = ({
     const geometry = new THREE.SphereGeometry(0.3, 16, 16);
     const isHighlighted = highlightedUsers.some(u => u.lat === user.lat && u.lng === user.lng);
     const isSelected = selectedCity && selectedCity.lat === user.lat && selectedCity.lng === user.lng;
+    const isTargeted = selectedPoint && selectedPoint.id === user.id && !selectedPoint.isCluster;
     
     let color = 0xffeb3b; // Yellow for normal users
     if (isSelected) color = 0xff4444; // Red for selected
@@ -524,6 +536,81 @@ export const Earth: React.FC<EarthProps> = ({
     
     group.add(sphere);
     group.add(glow);
+    
+    // Add targeting box effect if selected
+    if (isTargeted) {
+      const targetingBox = createTargetingBox(2.0);
+      group.add(targetingBox);
+    }
+    
+    return group;
+  };
+
+  // Create targeting/selection box effect
+  const createTargetingBox = (size: number) => {
+    const group = new THREE.Group();
+    
+    // Create animated green targeting box
+    const boxSize = size;
+    const thickness = 0.1;
+    const cornerLength = boxSize * 0.3;
+    
+    // Create corner brackets (4 corners, 2 lines each)
+    const corners = [
+      // Top-left corner
+      { pos: [-boxSize/2, boxSize/2, 0], lines: [
+        { start: [0, 0, 0], end: [cornerLength, 0, 0] },
+        { start: [0, 0, 0], end: [0, -cornerLength, 0] }
+      ]},
+      // Top-right corner
+      { pos: [boxSize/2, boxSize/2, 0], lines: [
+        { start: [0, 0, 0], end: [-cornerLength, 0, 0] },
+        { start: [0, 0, 0], end: [0, -cornerLength, 0] }
+      ]},
+      // Bottom-left corner
+      { pos: [-boxSize/2, -boxSize/2, 0], lines: [
+        { start: [0, 0, 0], end: [cornerLength, 0, 0] },
+        { start: [0, 0, 0], end: [0, cornerLength, 0] }
+      ]},
+      // Bottom-right corner
+      { pos: [boxSize/2, -boxSize/2, 0], lines: [
+        { start: [0, 0, 0], end: [-cornerLength, 0, 0] },
+        { start: [0, 0, 0], end: [0, cornerLength, 0] }
+      ]}
+    ];
+    
+    corners.forEach(corner => {
+      const cornerGroup = new THREE.Group();
+      cornerGroup.position.set(...corner.pos);
+      
+      corner.lines.forEach(line => {
+        const points = [
+          new THREE.Vector3(...line.start),
+          new THREE.Vector3(...line.end)
+        ];
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({ 
+          color: 0x00ff00, // Bright green
+          linewidth: 3,
+          transparent: true,
+          opacity: 0.9
+        });
+        const lineSegment = new THREE.Line(geometry, material);
+        cornerGroup.add(lineSegment);
+      });
+      
+      group.add(cornerGroup);
+    });
+    
+    // Add pulsing animation
+    const scale = 1 + Math.sin(Date.now() * 0.005) * 0.1;
+    group.scale.set(scale, scale, scale);
+    
+    // Add rotation animation
+    group.rotation.z = Date.now() * 0.001;
+    
+    // Mark this as a targeting box for animation updates
+    group.userData = { isTargetingBox: true };
     
     return group;
   };
@@ -653,6 +740,19 @@ export const Earth: React.FC<EarthProps> = ({
             }}
             customThreeObjectUpdate={(obj: any, d: any) => {
               obj.position.set(0, 0, 0);
+              
+              // Update targeting box animation if this point is selected
+              const isTargeted = selectedPoint && selectedPoint.id === d.id;
+              if (isTargeted) {
+                // Find and update the targeting box animation
+                obj.children.forEach((child: any) => {
+                  if (child.userData && child.userData.isTargetingBox) {
+                    const scale = 1 + Math.sin(Date.now() * 0.005) * 0.1;
+                    child.scale.set(scale, scale, scale);
+                    child.rotation.z = Date.now() * 0.001;
+                  }
+                });
+              }
             }}
           />
           {selectedCity && (
