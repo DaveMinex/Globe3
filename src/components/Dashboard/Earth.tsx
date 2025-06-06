@@ -67,21 +67,21 @@ export const Earth: React.FC<EarthProps> = ({
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       const delta = event.deltaY;
-      
+
       // Get current point of view
       const currentPOV = globeRef.current.pointOfView();
       const currentAltitude = currentPOV.altitude || 2.5;
-      
+
       // Calculate new altitude with custom scaling
       const zoomFactor = delta > 0 ? 1.2 : 0.8;
       const newAltitude = Math.max(0.2, Math.min(3, currentAltitude * zoomFactor));
-      
+
       // Update point of view with custom animation
       globeRef.current.pointOfView({
         ...currentPOV,
         altitude: newAltitude
       }, 100); // Quick animation
-      
+
       // Calculate zoom level with custom mapping
       const zoomLevel = Math.round(20 * (1 - Math.log(newAltitude) / Math.log(3)));
       setZoom(Math.max(0, Math.min(20, zoomLevel)));
@@ -89,7 +89,7 @@ export const Earth: React.FC<EarthProps> = ({
 
     const globeElement = globeRef.current.renderer().domElement;
     globeElement.addEventListener('wheel', handleWheel, { passive: false });
-    
+
     return () => {
       globeElement.removeEventListener('wheel', handleWheel);
     };
@@ -209,4 +209,4 @@ export const Earth: React.FC<EarthProps> = ({
   );
 };
 
-export default Earth; 
+export default Earth;
