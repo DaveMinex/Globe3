@@ -1,0 +1,42 @@
+Warning: Invalid DOM property &#x60;clip-rule&#x60;. Did you mean &#x60;clipRule&#x60;?
+    at path
+    at svg
+    at KycIcon (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/components/sidebar/KycIcon.tsx:17:3)
+    at button
+    at div
+    at div
+    at div
+    at Sidebar (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/components/sidebar/index.tsx:27:3)
+    at div
+    at div
+    at div
+    at div
+    at div
+    at DashboardHome (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/Pages/Dashboard/Home.tsx:25:3)
+    at RenderedRoute (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:5464:26)
+    at Routes (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:6198:3)
+    at Router (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:6141:13)
+    at BrowserRouter (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:9146:3)
+    at App
+    at ThemeProvider (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/context/ThemeContext.tsx:20:3)
+Warning: Invalid DOM property &#x60;stroke-linejoin&#x60;. Did you mean &#x60;strokeLinejoin&#x60;?
+    at path
+    at svg
+    at ApiIcon (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/components/sidebar/ApiIcon.tsx:17:3)
+    at button
+    at div
+    at div
+    at div
+    at Sidebar (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/components/sidebar/index.tsx:27:3)
+    at div
+    at div
+    at div
+    at div
+    at div
+    at DashboardHome (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/Pages/Dashboard/Home.tsx:25:3)
+    at RenderedRoute (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:5464:26)
+    at Routes (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:6198:3)
+    at Router (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:6141:13)
+    at BrowserRouter (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/node_modules/.vite/deps/react-router-dom.js?v=77b4b5da:9146:3)
+    at App
+    at ThemeProvider (https://7af2e08a-39a6-4156-b0f3-99d69d98cd0d-00-1cspvbw4l7tfk.picard.replit.dev:5173/src/context/ThemeContext.tsx:20:3)
