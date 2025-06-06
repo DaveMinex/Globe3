@@ -26,8 +26,8 @@ export function createClusterer(locations: Location[]) {
   }));
 
   const clusterer = new Supercluster({
-    radius: 80, // Smaller radius for less aggressive clustering
-    maxZoom: 10, // Higher max zoom to allow individual users at close zoom
+    radius: 60, // Medium radius for balanced clustering
+    maxZoom: 18, // Much higher max zoom for granular levels
     minZoom: 0,
     nodeSize: 64,
     extent: 512,
@@ -49,8 +49,8 @@ export function createClusterer(locations: Location[]) {
 export function getClusters(clusterer: Supercluster, bounds: [number, number, number, number], zoom: number): ClusterFeature[] {
   console.log('Getting clusters for zoom:', zoom, 'bounds:', bounds);
 
-  // Use the zoom level directly - Supercluster will handle clustering appropriately
-  const effectiveZoom = Math.min(Math.max(zoom, 0), 10);
+  // Use expanded zoom range for more granular clustering levels
+  const effectiveZoom = Math.min(Math.max(zoom, 0), 18);
   const clusters = clusterer.getClusters(bounds, Math.round(effectiveZoom));
   console.log('Raw clusters:', clusters.length, 'effective zoom:', effectiveZoom);
 

@@ -79,24 +79,43 @@ export const Earth: React.FC<EarthProps> = ({
     const pov = globeRef.current.pointOfView();
     const altitude = pov.altitude || 2;
     
-    // At very close zoom (low altitude), show individual users in a reasonable area
-    // At far zoom (high altitude), show clusters with wider bounds
+    // Progressive bounds based on altitude for granular clustering
     let latRange, lngRange;
     
-    if (altitude < 0.5) {
-      // Very close - show users in ~50km radius
-      latRange = 0.5; // ~55km
-      lngRange = 0.7; // ~77km
+    if (altitude < 0.2) {
+      // Ultra close - ~10km radius
+      latRange = 0.1;
+      lngRange = 0.15;
+    } else if (altitude < 0.4) {
+      // Very close - ~25km radius
+      latRange = 0.25;
+      lngRange = 0.35;
+    } else if (altitude < 0.6) {
+      // Close - ~50km radius
+      latRange = 0.5;
+      lngRange = 0.7;
+    } else if (altitude < 0.8) {
+      // Near - ~100km radius
+      latRange = 1;
+      lngRange = 1.4;
     } else if (altitude < 1) {
-      // Close - show users in ~200km radius  
+      // Medium close - ~200km radius
       latRange = 2;
       lngRange = 3;
-    } else if (altitude < 2) {
-      // Medium - show users in ~500km radius
+    } else if (altitude < 1.5) {
+      // Medium - ~500km radius
       latRange = 5;
       lngRange = 7;
+    } else if (altitude < 2) {
+      // Medium far - ~1000km radius
+      latRange = 10;
+      lngRange = 15;
+    } else if (altitude < 3) {
+      // Far - ~2000km radius
+      latRange = 20;
+      lngRange = 30;
     } else {
-      // Far - show all users globally
+      // Very far - global view
       latRange = 90;
       lngRange = 180;
     }
@@ -148,18 +167,30 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: newAltitude
       }, 30); // Smoother animation
 
-      // Calculate zoom level for clustering - higher altitude = lower zoom (more clustering)
+      // Calculate zoom level for clustering - much more granular levels
       let zoomLevel;
-      if (newAltitude > 3) {
-        zoomLevel = 0; // Far out - maximum clustering
+      if (newAltitude > 4) {
+        zoomLevel = 0; // Global view - maximum clustering (continents)
+      } else if (newAltitude > 3) {
+        zoomLevel = 2; // Country level clustering
+      } else if (newAltitude > 2.5) {
+        zoomLevel = 4; // Regional clustering
       } else if (newAltitude > 2) {
-        zoomLevel = 1; // Medium clustering
+        zoomLevel = 6; // State/province level
+      } else if (newAltitude > 1.5) {
+        zoomLevel = 8; // City level clustering
       } else if (newAltitude > 1) {
-        zoomLevel = 2; // Some clustering
-      } else if (newAltitude > 0.5) {
-        zoomLevel = 4; // Minimal clustering
+        zoomLevel = 10; // District level
+      } else if (newAltitude > 0.8) {
+        zoomLevel = 12; // Neighborhood level
+      } else if (newAltitude > 0.6) {
+        zoomLevel = 14; // Street level
+      } else if (newAltitude > 0.4) {
+        zoomLevel = 16; // Block level
+      } else if (newAltitude > 0.2) {
+        zoomLevel = 18; // Very detailed - individual users
       } else {
-        zoomLevel = 10; // Very close - show individual users
+        zoomLevel = 18; // Maximum detail - all individual users
       }
       
       console.log('Altitude:', newAltitude, 'Zoom level:', zoomLevel);
