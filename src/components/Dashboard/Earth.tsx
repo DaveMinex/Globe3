@@ -405,40 +405,50 @@ export const Earth: React.FC<EarthProps> = ({
       pinContext.closePath();
       pinContext.stroke();
       
-      // Add text (user count)
+      // Add text (user count) - Reset shadow first
+      pinContext.shadowColor = 'transparent';
+      pinContext.shadowBlur = 0;
+      pinContext.shadowOffsetX = 0;
+      pinContext.shadowOffsetY = 0;
+      
+      // Set text properties
       pinContext.fillStyle = textColor;
-      pinContext.font = 'bold 32px Arial, sans-serif';
+      pinContext.font = 'bold 36px Arial, sans-serif';
       pinContext.textAlign = 'center';
       pinContext.textBaseline = 'middle';
       
       // Format the display text
       let displayText = count.toString();
       if (count >= 1000) {
-        displayText = Math.floor(count / 1000) + 'k+';
+        displayText = Math.floor(count / 1000) + 'k';
       } else if (count >= 100) {
-        displayText = Math.floor(count / 10) * 10 + '+';
+        displayText = Math.floor(count / 100) + '00+';
       } else {
-        displayText = count + '+';
+        displayText = count.toString();
       }
       
-      // Add text shadow for better readability
-      pinContext.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      pinContext.shadowBlur = 3;
-      pinContext.shadowOffsetX = 1;
-      pinContext.shadowOffsetY = 1;
+      // Draw text with high contrast outline first
+      pinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+      pinContext.lineWidth = 4;
+      pinContext.strokeText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
       
+      // Then draw the main text
+      pinContext.fillStyle = '#ffffff';
       pinContext.fillText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
       
       // Create sprite from canvas
       const pinTexture = new THREE.CanvasTexture(pinCanvas);
       pinTexture.needsUpdate = true;
       pinTexture.flipY = false; // Important for proper canvas rendering
+      pinTexture.minFilter = THREE.LinearFilter;
+      pinTexture.magFilter = THREE.LinearFilter;
+      pinTexture.generateMipmaps = false;
       
       const pinMaterial = new THREE.SpriteMaterial({ 
         map: pinTexture,
         transparent: true,
         alphaTest: 0.01,
-        depthTest: true,
+        depthTest: false,
         depthWrite: false
       });
       const pinSprite = new THREE.Sprite(pinMaterial);
@@ -527,9 +537,15 @@ export const Earth: React.FC<EarthProps> = ({
       userPinContext.closePath();
       userPinContext.stroke();
       
-      // Add user count text
+      // Add user count text - Reset shadow first
+      userPinContext.shadowColor = 'transparent';
+      userPinContext.shadowBlur = 0;
+      userPinContext.shadowOffsetX = 0;
+      userPinContext.shadowOffsetY = 0;
+      
+      // Set text properties
       userPinContext.fillStyle = '#ffffff';
-      userPinContext.font = 'bold 28px Arial, sans-serif';
+      userPinContext.font = 'bold 32px Arial, sans-serif';
       userPinContext.textAlign = 'center';
       userPinContext.textBaseline = 'middle';
       
@@ -543,24 +559,28 @@ export const Earth: React.FC<EarthProps> = ({
         displayText = userCount.toString();
       }
       
-      // Add text shadow
-      userPinContext.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      userPinContext.shadowBlur = 2;
-      userPinContext.shadowOffsetX = 1;
-      userPinContext.shadowOffsetY = 1;
+      // Draw text with high contrast outline first
+      userPinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+      userPinContext.lineWidth = 3;
+      userPinContext.strokeText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
       
+      // Then draw the main text
+      userPinContext.fillStyle = '#ffffff';
       userPinContext.fillText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
       
       // Create sprite
       const userPinTexture = new THREE.CanvasTexture(userPinCanvas);
       userPinTexture.needsUpdate = true;
       userPinTexture.flipY = false; // Important for proper canvas rendering
+      userPinTexture.minFilter = THREE.LinearFilter;
+      userPinTexture.magFilter = THREE.LinearFilter;
+      userPinTexture.generateMipmaps = false;
       
       const userPinMaterial = new THREE.SpriteMaterial({ 
         map: userPinTexture,
         transparent: true,
         alphaTest: 0.01,
-        depthTest: true,
+        depthTest: false,
         depthWrite: false
       });
       const userPinSprite = new THREE.Sprite(userPinMaterial);
