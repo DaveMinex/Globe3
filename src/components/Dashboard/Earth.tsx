@@ -116,7 +116,9 @@ export const Earth: React.FC<EarthProps> = ({
   };
 
   useEffect(() => {
-    updateClusters();
+    if (clusterer) {
+      updateClusters();
+    }
   }, [zoom, clusterer]);
 
   // Handle zoom changes with better zoom level mapping
@@ -201,6 +203,9 @@ export const Earth: React.FC<EarthProps> = ({
     };
   }, [globeRef.current]);
 
+  // Track camera position for clustering updates
+  const [cameraPosition, setCameraPosition] = useState({ lat: 0, lng: 0, altitude: 2 });
+
   // Listen to camera movements
   useEffect(() => {
     if (!globeRef.current) return;
@@ -209,10 +214,27 @@ export const Earth: React.FC<EarthProps> = ({
     let updateTimeout: NodeJS.Timeout;
     
     const handleCameraMove = () => {
-      clearTimeout(updateTimeout);
-      updateTimeout = setTimeout(() => {
-        updateClusters();
-      }, 150);
+      const pov = globe.pointOfView();
+      const newPosition = {
+        lat: pov.lat || 0,
+        lng: pov.lng || 0,
+        altitude: pov.altitude || 2
+      };
+      
+      // Check if position changed significantly (avoid unnecessary updates)
+      const positionChanged = 
+        Math.abs(newPosition.lat - cameraPosition.lat) > 0.1 ||
+        Math.abs(newPosition.lng - cameraPosition.lng) > 0.1 ||
+        Math.abs(newPosition.altitude - cameraPosition.altitude) > 0.01;
+      
+      if (positionChanged) {
+        setCameraPosition(newPosition);
+        
+        clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(() => {
+          updateClusters();
+        }, 100); // Reduced timeout for more responsive updates
+      }
     };
     
     globe.controls().addEventListener('change', handleCameraMove);
@@ -221,7 +243,14 @@ export const Earth: React.FC<EarthProps> = ({
       globe.controls().removeEventListener('change', handleCameraMove);
       clearTimeout(updateTimeout);
     };
-  }, [clusterer, zoom]);
+  }, [clusterer, cameraPosition]);
+
+  // Update clusters when camera position changes
+  useEffect(() => {
+    if (clusterer) {
+      updateClusters();
+    }
+  }, [cameraPosition, clusterer]);
 
   // Handle point click with improved cluster expansion
   const handlePointClick = (point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {
