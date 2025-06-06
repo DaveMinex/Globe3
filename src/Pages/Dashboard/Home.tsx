@@ -49,14 +49,12 @@ export const DashboardHome = ({
     useEffect(() => {
         if (globeRef.current) {
             const controls = globeRef.current.controls();
-            controls.enableZoom = true;
+            controls.enableZoom = false; // Disable default zoom to use custom
             controls.enablePan = true;
             controls.enableRotate = true;
             controls.rotateSpeed = 0.5;
-            controls.zoomSpeed = 0.5;
             controls.panSpeed = 0.5;
-            controls.minDistance = 200;
-            controls.maxDistance = 500;
+            // Remove minDistance and maxDistance constraints
         }
     }, []);
 

@@ -75,11 +75,16 @@ export const Earth: React.FC<EarthProps> = ({
   // Listen to zoom changes
   useEffect(() => {
     if (!globeRef.current) return;
-    const controls = globeRef.current.controls();
-    controls.enableZoom = false;
-
+    
+    let isHandling = false;
+    
     const handleWheel = (event: WheelEvent) => {
+      if (isHandling) return;
+      isHandling = true;
+      
       event.preventDefault();
+      event.stopPropagation();
+      
       const delta = event.deltaY;
 
       // Get current point of view
@@ -87,27 +92,43 @@ export const Earth: React.FC<EarthProps> = ({
       const currentAltitude = currentPOV.altitude || 2.5;
 
       // Calculate new altitude with much finer scaling
-      const zoomFactor = delta > 0 ? 1.15 : 0.87;
-      const newAltitude = Math.max(0.05, Math.min(5, currentAltitude * zoomFactor));
+      const zoomFactor = delta > 0 ? 1.1 : 0.9; // More gradual zoom
+      const newAltitude = Math.max(0.01, Math.min(10, currentAltitude * zoomFactor)); // Extended range
 
-      // Update point of view with custom animation
+      // Update point of view with smooth animation
       globeRef.current.pointOfView({
         ...currentPOV,
         altitude: newAltitude
-      }, 50); // Faster animation
+      }, 30); // Smoother animation
 
       // Calculate zoom level with extended range and better mapping
-      const zoomLevel = Math.round(20 * (1 - Math.log(newAltitude + 0.05) / Math.log(5.05)));
+      const normalizedAltitude = (newAltitude - 0.01) / (10 - 0.01);
+      const zoomLevel = Math.round(20 * (1 - normalizedAltitude));
       setZoom(Math.max(0, Math.min(20, zoomLevel)));
+      
+      // Reset handling flag after a brief delay
+      setTimeout(() => {
+        isHandling = false;
+      }, 50);
     };
 
+    // Add event listener to the canvas element directly
     const globeElement = globeRef.current.renderer().domElement;
     globeElement.addEventListener('wheel', handleWheel, { passive: false });
+    
+    // Also add to the parent container to catch all wheel events
+    const container = globeElement.parentElement;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+    }
 
     return () => {
       globeElement.removeEventListener('wheel', handleWheel);
+      if (container) {
+        container.removeEventListener('wheel', handleWheel);
+      }
     };
-  }, [globeRef]);
+  }, [globeRef.current]);
 
   // Update clusters whenever zoom changes
   useEffect(() => {
