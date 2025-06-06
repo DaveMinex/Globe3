@@ -707,7 +707,27 @@ export const Earth: React.FC<EarthProps> = ({
             pointLat={(d: any) => d.lat}
             pointLng={(d: any) => d.lng}
             pointAltitude={0.001}
-            pointLabel=""
+            pointLabel={(d: any) => {
+              if (d.isCluster) {
+                const count = d.count || 0;
+                const totalUsers = d.properties?.totalUsers || count;
+                return `<div style="background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                  <div style="text-align: center;">
+                    <div style="font-size: 16px; margin-bottom: 4px;">${count.toLocaleString()} locations</div>
+                    <div style="font-size: 14px; color: #4CAF50;">${totalUsers?.toLocaleString() || count.toLocaleString()} users</div>
+                  </div>
+                </div>`;
+              } else {
+                const userCount = d.properties?.users || 1;
+                const city = d.properties?.city || 'Unknown';
+                return `<div style="background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                  <div style="text-align: center;">
+                    <div style="font-size: 16px; margin-bottom: 4px;">${city}</div>
+                    <div style="font-size: 14px; color: #4CAF50;">${userCount.toLocaleString()} users</div>
+                  </div>
+                </div>`;
+              }
+            }}
             pointColor={(d: any) => {
               if (d.isCluster) {
                 const count = d.count || 0;
