@@ -82,9 +82,9 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: newAltitude
       }, 100); // Quick animation
 
-      // Calculate zoom level with custom mapping
-      const zoomLevel = Math.round(20 * (1 - Math.log(newAltitude) / Math.log(3)));
-      setZoom(Math.max(0, Math.min(20, zoomLevel)));
+      // Calculate zoom level with better mapping
+      const zoomLevel = Math.round(16 * (1 - Math.log(newAltitude) / Math.log(3)));
+      setZoom(Math.max(0, Math.min(16, zoomLevel)));
     };
 
     const globeElement = globeRef.current.renderer().domElement;
@@ -119,8 +119,11 @@ export const Earth: React.FC<EarthProps> = ({
     }
   };
 
-  // Only show user points when zoomed in (e.g., zoom >= 10)
-  const visiblePoints = clusters.filter(d => d.isCluster || zoom >= 10);
+  // Show clusters at low zoom, individual users at high zoom
+  const visiblePoints = clusters.filter(d => {
+    if (d.isCluster) return true;
+    return zoom >= 12; // Only show individual users when very zoomed in
+  });
 
   return (
     <div className={`w-full h-[100vh] z-0 relative  translate-x-[-60px] ${viewMode === '2D' ? 'pointer-events-none' : ''}`}>
