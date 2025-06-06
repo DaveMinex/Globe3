@@ -474,18 +474,27 @@ export const Earth: React.FC<EarthProps> = ({
     const numberCanvas = document.createElement('canvas');
     const numberContext = numberCanvas.getContext('2d');
     if (numberContext) {
-      numberCanvas.width = 400;
-      numberCanvas.height = 160;
+      // Get current camera distance for scaling
+      const pov = globeRef.current?.pointOfView();
+      const altitude = pov?.altitude || 2;
+      
+      // Scale label size based on distance - closer = smaller labels, farther = larger labels
+      const distanceScale = Math.max(0.5, Math.min(2.0, altitude * 1.5));
+      
+      const baseWidth = 400;
+      const baseHeight = 160;
+      numberCanvas.width = Math.floor(baseWidth * distanceScale);
+      numberCanvas.height = Math.floor(baseHeight * distanceScale);
       
       // Clear canvas
-      numberContext.clearRect(0, 0, 400, 160);
+      numberContext.clearRect(0, 0, numberCanvas.width, numberCanvas.height);
       
       // Create rounded background for better readability
-      const bgWidth = 380;
-      const bgHeight = 140;
-      const bgX = 10;
-      const bgY = 10;
-      const cornerRadius = 20;
+      const bgWidth = Math.floor(380 * distanceScale);
+      const bgHeight = Math.floor(140 * distanceScale);
+      const bgX = Math.floor(10 * distanceScale);
+      const bgY = Math.floor(10 * distanceScale);
+      const cornerRadius = Math.floor(20 * distanceScale);
       
       // Background with gradient
       const gradient = numberContext.createLinearGradient(0, 0, 0, bgHeight);
@@ -497,11 +506,11 @@ export const Earth: React.FC<EarthProps> = ({
       numberContext.roundRect(bgX, bgY, bgWidth, bgHeight, cornerRadius);
       numberContext.fill();
       
-      // Add glowing border
+      // Add glowing border with scaled thickness
       numberContext.strokeStyle = '#ffffff';
-      numberContext.lineWidth = 3;
+      numberContext.lineWidth = Math.max(1, 3 * distanceScale);
       numberContext.shadowColor = '#ffffff';
-      numberContext.shadowBlur = 10;
+      numberContext.shadowBlur = Math.max(3, 10 * distanceScale);
       numberContext.beginPath();
       numberContext.roundRect(bgX, bgY, bgWidth, bgHeight, cornerRadius);
       numberContext.stroke();
@@ -513,9 +522,10 @@ export const Earth: React.FC<EarthProps> = ({
       // Add the count text with better formatting
       numberContext.fillStyle = '#ffffff';
       
-      // Adjust font size based on text length
+      // Adjust font size based on text length and distance
       const textLength = count.toString().length;
-      let fontSize = textLength > 4 ? 50 : textLength > 3 ? 60 : 70;
+      let baseFontSize = textLength > 4 ? 50 : textLength > 3 ? 60 : 70;
+      let fontSize = Math.floor(baseFontSize * distanceScale);
       
       numberContext.font = `bold ${fontSize}px Arial, sans-serif`;
       numberContext.textAlign = 'center';
@@ -529,13 +539,13 @@ export const Earth: React.FC<EarthProps> = ({
         displayText = (count / 1000).toFixed(0) + 'K';
       }
       
-      // Add text shadow for depth
+      // Add text shadow for depth with scaled values
       numberContext.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      numberContext.shadowBlur = 3;
-      numberContext.shadowOffsetX = 2;
-      numberContext.shadowOffsetY = 2;
+      numberContext.shadowBlur = Math.max(1, 3 * distanceScale);
+      numberContext.shadowOffsetX = Math.max(1, 2 * distanceScale);
+      numberContext.shadowOffsetY = Math.max(1, 2 * distanceScale);
       
-      numberContext.fillText(displayText, 200, 80);
+      numberContext.fillText(displayText, numberCanvas.width / 2, numberCanvas.height / 2);
       
       const numberTexture = new THREE.CanvasTexture(numberCanvas);
       numberTexture.needsUpdate = true;
@@ -548,9 +558,14 @@ export const Earth: React.FC<EarthProps> = ({
       });
       const numberSprite = new THREE.Sprite(numberMaterial);
       
-      // Position above the cluster with better scaling
-      numberSprite.position.set(0, size * 3.5, 0.2);
-      numberSprite.scale.set(size * 3, size * 1.2, 1);
+      // Position above the cluster with distance-based scaling
+      // Closer camera = smaller, lower labels; farther camera = larger, higher labels
+      const labelHeight = size * 3.5 * distanceScale;
+      const labelWidth = size * 3 * distanceScale;
+      const labelHeightScale = size * 1.2 * distanceScale;
+      
+      numberSprite.position.set(0, labelHeight, 0.2);
+      numberSprite.scale.set(labelWidth, labelHeightScale, 1);
       
       group.add(numberSprite);
     }
@@ -745,19 +760,24 @@ export const Earth: React.FC<EarthProps> = ({
               const tooltipCanvas = document.createElement('canvas');
               const tooltipContext = tooltipCanvas.getContext('2d');
               if (tooltipContext) {
-                tooltipCanvas.width = 400;
-                tooltipCanvas.height = d.isCluster ? 180 : 120;
+                // Scale tooltip size based on camera distance
+                const pov = globeRef.current?.pointOfView();
+                const altitude = pov?.altitude || 2;
+                const tooltipScale = Math.max(0.6, Math.min(1.8, altitude * 1.2));
+                
+                tooltipCanvas.width = Math.floor(400 * tooltipScale);
+                tooltipCanvas.height = Math.floor((d.isCluster ? 180 : 120) * tooltipScale);
                 
                 // Background with rounded corners
                 tooltipContext.fillStyle = 'rgba(255, 255, 255, 0.95)';
                 tooltipContext.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-                tooltipContext.lineWidth = 2;
+                tooltipContext.lineWidth = Math.max(1, 2 * tooltipScale);
                 
-                const cornerRadius = 15;
-                const width = tooltipCanvas.width - 20;
-                const height = tooltipCanvas.height - 20;
-                const x = 10;
-                const y = 10;
+                const cornerRadius = Math.floor(15 * tooltipScale);
+                const width = tooltipCanvas.width - Math.floor(20 * tooltipScale);
+                const height = tooltipCanvas.height - Math.floor(20 * tooltipScale);
+                const x = Math.floor(10 * tooltipScale);
+                const y = Math.floor(10 * tooltipScale);
                 
                 // Draw rounded rectangle
                 tooltipContext.beginPath();
@@ -769,27 +789,27 @@ export const Earth: React.FC<EarthProps> = ({
                 if (d.isCluster) {
                   // Cluster tooltip
                   tooltipContext.fillStyle = '#1f2937';
-                  tooltipContext.font = 'bold 28px Arial';
+                  tooltipContext.font = `bold ${Math.floor(28 * tooltipScale)}px Arial`;
                   tooltipContext.textAlign = 'center';
-                  tooltipContext.fillText(`${d.count.toLocaleString()} locations`, 200, 50);
+                  tooltipContext.fillText(`${d.count.toLocaleString()} locations`, tooltipCanvas.width / 2, Math.floor(50 * tooltipScale));
                   
                   tooltipContext.fillStyle = '#6b7280';
-                  tooltipContext.font = '22px Arial';
-                  tooltipContext.fillText(`${(d.properties?.totalUsers || d.count).toLocaleString()} total users`, 200, 85);
+                  tooltipContext.font = `${Math.floor(22 * tooltipScale)}px Arial`;
+                  tooltipContext.fillText(`${(d.properties?.totalUsers || d.count).toLocaleString()} total users`, tooltipCanvas.width / 2, Math.floor(85 * tooltipScale));
                   
                   tooltipContext.fillStyle = '#2563eb';
-                  tooltipContext.font = '18px Arial';
-                  tooltipContext.fillText('Click to zoom in', 200, 115);
+                  tooltipContext.font = `${Math.floor(18 * tooltipScale)}px Arial`;
+                  tooltipContext.fillText('Click to zoom in', tooltipCanvas.width / 2, Math.floor(115 * tooltipScale));
                 } else {
                   // Individual user tooltip
                   tooltipContext.fillStyle = '#1f2937';
-                  tooltipContext.font = 'bold 24px Arial';
+                  tooltipContext.font = `bold ${Math.floor(24 * tooltipScale)}px Arial`;
                   tooltipContext.textAlign = 'center';
-                  tooltipContext.fillText(d.properties.city, 200, 45);
+                  tooltipContext.fillText(d.properties.city, tooltipCanvas.width / 2, Math.floor(45 * tooltipScale));
                   
                   tooltipContext.fillStyle = '#6b7280';
-                  tooltipContext.font = '20px Arial';
-                  tooltipContext.fillText(`${d.properties.users.toLocaleString()} users`, 200, 75);
+                  tooltipContext.font = `${Math.floor(20 * tooltipScale)}px Arial`;
+                  tooltipContext.fillText(`${d.properties.users.toLocaleString()} users`, tooltipCanvas.width / 2, Math.floor(75 * tooltipScale));
                 }
                 
                 const tooltipTexture = new THREE.CanvasTexture(tooltipCanvas);
@@ -801,10 +821,16 @@ export const Earth: React.FC<EarthProps> = ({
                 });
                 const tooltipSprite = new THREE.Sprite(tooltipMaterial);
                 
-                // Position tooltip above the marker
-                const tooltipHeight = d.isCluster ? 4.5 : 3;
-                const tooltipWidth = d.isCluster ? 6 : 4.5;
-                tooltipSprite.position.set(0, (d.isCluster ? 5 : 2), 0.2);
+                // Position tooltip above the marker with distance scaling
+                const baseTooltipHeight = d.isCluster ? 4.5 : 3;
+                const baseTooltipWidth = d.isCluster ? 6 : 4.5;
+                const baseTooltipY = d.isCluster ? 5 : 2;
+                
+                const tooltipHeight = baseTooltipHeight * tooltipScale;
+                const tooltipWidth = baseTooltipWidth * tooltipScale;
+                const tooltipY = baseTooltipY * tooltipScale;
+                
+                tooltipSprite.position.set(0, tooltipY, 0.2);
                 tooltipSprite.scale.set(tooltipWidth, tooltipHeight, 1);
                 
                 group.add(tooltipSprite);
