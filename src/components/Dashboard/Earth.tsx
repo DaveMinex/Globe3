@@ -40,30 +40,59 @@ export const Earth: React.FC<EarthProps> = ({
   // Create clusterer on mount or when locations change
   useEffect(() => {
     const clusterer = new Supercluster({
-      radius: 80, // Larger radius for better clustering
-      maxZoom: 15, // Lower max zoom so clusters persist longer
+      radius: 150, // Much larger radius for globe scale
+      maxZoom: 12, // Lower max zoom to force clustering
       minZoom: 0,
       nodeSize: 64,
       extent: 512,
       reduce: (acc, props) => {
         acc.point_count = (acc.point_count || 0) + 1;
+        acc.users = (acc.users || 0) + props.users;
       },
       map: (props) => ({
-        point_count: 1
+        point_count: 1,
+        users: props.users
       })
     });
-    clusterer.load(locations);
+    
+    const points = locations.map((loc, i) => ({
+      type: "Feature" as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [loc.lng, loc.lat],
+      },
+      properties: {
+        ...loc,
+        id: i,
+      },
+    }));
+    
+    clusterer.load(points);
     setClusterer(clusterer);
   }, [locations]);
 
   // Update clusters on zoom or move
   const updateClusters = () => {
     if (!globeRef.current || !clusterer) return;
-    // Get globe bounds (approximate)
-    const bounds: [number, number, number, number] = [-180, -85, 180, 85];
-    console.log('Updating clusters with zoom:', zoom);
+    
+    // Get current view bounds or use visible area
+    const pov = globeRef.current.pointOfView();
+    const altitude = pov.altitude || 2;
+    
+    // Calculate bounds based on current view - smaller bounds = better clustering
+    const latRange = altitude * 40; // Smaller range for better clustering
+    const lngRange = altitude * 60;
+    
+    const bounds: [number, number, number, number] = [
+      Math.max(-180, (pov.lng || 0) - lngRange),
+      Math.max(-85, (pov.lat || 0) - latRange),
+      Math.min(180, (pov.lng || 0) + lngRange),
+      Math.min(85, (pov.lat || 0) + latRange)
+    ];
+    
+    console.log('Updating clusters with zoom:', zoom, 'bounds:', bounds);
     const newClusters = getClusters(clusterer, bounds, zoom);
-    console.log('New clusters:', newClusters);
+    console.log('New clusters:', newClusters.length);
     setClusters(newClusters);
   };
 
@@ -101,13 +130,13 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: newAltitude
       }, 30); // Smoother animation
 
-      // Calculate zoom level with better mapping - higher altitude = lower zoom
-      const minAlt = 0.01;
-      const maxAlt = 10;
+      // Calculate zoom level - higher altitude = lower zoom for clustering
+      const minAlt = 0.1;
+      const maxAlt = 8;
       const clampedAltitude = Math.max(minAlt, Math.min(maxAlt, newAltitude));
       const normalizedAltitude = (clampedAltitude - minAlt) / (maxAlt - minAlt);
-      const zoomLevel = Math.round(20 * (1 - normalizedAltitude));
-      const finalZoom = Math.max(0, Math.min(20, zoomLevel));
+      const zoomLevel = Math.round(12 * (1 - normalizedAltitude)); // Scale to 0-12 to match maxZoom
+      const finalZoom = Math.max(0, Math.min(12, zoomLevel));
       console.log('Altitude:', newAltitude, 'Normalized:', normalizedAltitude, 'Zoom:', finalZoom);
       setZoom(finalZoom);
       

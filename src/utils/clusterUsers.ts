@@ -26,16 +26,18 @@ export function createClusterer(locations: Location[]) {
   }));
 
   const clusterer = new Supercluster({
-    radius: 80, // Larger radius for better clustering
-    maxZoom: 15, // Lower max zoom so clusters persist longer
+    radius: 150, // Much larger radius for globe scale
+    maxZoom: 12, // Lower max zoom to force clustering
     minZoom: 0,
     nodeSize: 64,
     extent: 512,
     reduce: (acc, props) => {
       acc.point_count = (acc.point_count || 0) + 1;
+      acc.users = (acc.users || 0) + props.users;
     },
     map: (props) => ({
-      point_count: 1
+      point_count: 1,
+      users: props.users
     })
   });
 
