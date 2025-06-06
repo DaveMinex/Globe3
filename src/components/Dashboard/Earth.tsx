@@ -75,14 +75,31 @@ export const Earth: React.FC<EarthProps> = ({
   const updateClusters = () => {
     if (!globeRef.current || !clusterer) return;
     
-    // Get current view bounds or use visible area
+    // Get current view bounds
     const pov = globeRef.current.pointOfView();
     const altitude = pov.altitude || 2;
     
-    // Calculate visible area based on altitude - smaller altitude = smaller visible area
-    const viewFactor = Math.max(0.5, Math.min(10, altitude)); // Clamp between 0.5 and 10
-    const latRange = viewFactor * 15; // Much smaller range for focused view
-    const lngRange = viewFactor * 20;
+    // At very close zoom (low altitude), show individual users in a reasonable area
+    // At far zoom (high altitude), show clusters with wider bounds
+    let latRange, lngRange;
+    
+    if (altitude < 0.5) {
+      // Very close - show users in ~50km radius
+      latRange = 0.5; // ~55km
+      lngRange = 0.7; // ~77km
+    } else if (altitude < 1) {
+      // Close - show users in ~200km radius  
+      latRange = 2;
+      lngRange = 3;
+    } else if (altitude < 2) {
+      // Medium - show users in ~500km radius
+      latRange = 5;
+      lngRange = 7;
+    } else {
+      // Far - show all users globally
+      latRange = 90;
+      lngRange = 180;
+    }
     
     const bounds: [number, number, number, number] = [
       Math.max(-180, (pov.lng || 0) - lngRange),
@@ -131,15 +148,22 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: newAltitude
       }, 30); // Smoother animation
 
-      // Calculate zoom level - higher altitude = lower zoom for clustering
-      const minAlt = 0.1;
-      const maxAlt = 5;
-      const clampedAltitude = Math.max(minAlt, Math.min(maxAlt, newAltitude));
-      const normalizedAltitude = (clampedAltitude - minAlt) / (maxAlt - minAlt);
-      const zoomLevel = Math.round(6 * (1 - normalizedAltitude)); // Scale to 0-6 to match maxZoom
-      const finalZoom = Math.max(0, Math.min(6, zoomLevel));
-      console.log('Altitude:', newAltitude, 'Normalized:', normalizedAltitude, 'Zoom:', finalZoom);
-      setZoom(finalZoom);
+      // Calculate zoom level for clustering - higher altitude = lower zoom (more clustering)
+      let zoomLevel;
+      if (newAltitude > 3) {
+        zoomLevel = 0; // Far out - maximum clustering
+      } else if (newAltitude > 2) {
+        zoomLevel = 1; // Medium clustering
+      } else if (newAltitude > 1) {
+        zoomLevel = 2; // Some clustering
+      } else if (newAltitude > 0.5) {
+        zoomLevel = 4; // Minimal clustering
+      } else {
+        zoomLevel = 10; // Very close - show individual users
+      }
+      
+      console.log('Altitude:', newAltitude, 'Zoom level:', zoomLevel);
+      setZoom(zoomLevel);
       
       // Reset handling flag after a brief delay
       setTimeout(() => {
