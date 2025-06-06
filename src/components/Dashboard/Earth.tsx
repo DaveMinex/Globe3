@@ -539,18 +539,7 @@ export const Earth: React.FC<EarthProps> = ({
             pointLat={(d: any) => d.lat}
             pointLng={(d: any) => d.lng}
             pointAltitude={0.001}
-            pointLabel={(d: any) =>
-              d.isCluster
-                ? `<div class='bg-white p-3 rounded-lg shadow-lg border max-w-xs'>
-                     <div class='font-bold text-gray-800 text-lg'>${d.count.toLocaleString()} locations</div>
-                     <div class='text-sm text-gray-600'>${(d.properties?.totalUsers || d.count).toLocaleString()} total users</div>
-                     <div class='text-xs text-blue-600 mt-1'>Click to zoom in</div>
-                   </div>`
-                : `<div class='bg-white p-2 rounded-lg shadow-lg border'>
-                     <div class='font-bold text-gray-800'>${d.properties.city}</div>
-                     <div class='text-sm text-gray-600'>${d.properties.users.toLocaleString()} users</div>
-                   </div>`
-            }
+            pointLabel=""
             pointColor={(d: any) => {
               if (d.isCluster) {
                 const count = d.count || 0;
@@ -585,7 +574,82 @@ export const Earth: React.FC<EarthProps> = ({
             atmosphereColor="rgba(255, 255, 255, 0.2)"
             atmosphereAltitude={0.1}
             customThreeObject={(d: any) => {
-              return d.isCluster ? createClusterMarker(d) : createUserMarker(d);
+              const group = new THREE.Group();
+              
+              // Add the main marker (cluster or user)
+              const marker = d.isCluster ? createClusterMarker(d) : createUserMarker(d);
+              group.add(marker);
+              
+              // Create permanent tooltip
+              const tooltipCanvas = document.createElement('canvas');
+              const tooltipContext = tooltipCanvas.getContext('2d');
+              if (tooltipContext) {
+                tooltipCanvas.width = 400;
+                tooltipCanvas.height = d.isCluster ? 180 : 120;
+                
+                // Background with rounded corners
+                tooltipContext.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                tooltipContext.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                tooltipContext.lineWidth = 2;
+                
+                const cornerRadius = 15;
+                const width = tooltipCanvas.width - 20;
+                const height = tooltipCanvas.height - 20;
+                const x = 10;
+                const y = 10;
+                
+                // Draw rounded rectangle
+                tooltipContext.beginPath();
+                tooltipContext.roundRect(x, y, width, height, cornerRadius);
+                tooltipContext.fill();
+                tooltipContext.stroke();
+                
+                // Add text content
+                if (d.isCluster) {
+                  // Cluster tooltip
+                  tooltipContext.fillStyle = '#1f2937';
+                  tooltipContext.font = 'bold 28px Arial';
+                  tooltipContext.textAlign = 'center';
+                  tooltipContext.fillText(`${d.count.toLocaleString()} locations`, 200, 50);
+                  
+                  tooltipContext.fillStyle = '#6b7280';
+                  tooltipContext.font = '22px Arial';
+                  tooltipContext.fillText(`${(d.properties?.totalUsers || d.count).toLocaleString()} total users`, 200, 85);
+                  
+                  tooltipContext.fillStyle = '#2563eb';
+                  tooltipContext.font = '18px Arial';
+                  tooltipContext.fillText('Click to zoom in', 200, 115);
+                } else {
+                  // Individual user tooltip
+                  tooltipContext.fillStyle = '#1f2937';
+                  tooltipContext.font = 'bold 24px Arial';
+                  tooltipContext.textAlign = 'center';
+                  tooltipContext.fillText(d.properties.city, 200, 45);
+                  
+                  tooltipContext.fillStyle = '#6b7280';
+                  tooltipContext.font = '20px Arial';
+                  tooltipContext.fillText(`${d.properties.users.toLocaleString()} users`, 200, 75);
+                }
+                
+                const tooltipTexture = new THREE.CanvasTexture(tooltipCanvas);
+                const tooltipMaterial = new THREE.SpriteMaterial({ 
+                  map: tooltipTexture,
+                  transparent: true,
+                  depthTest: false,
+                  depthWrite: false
+                });
+                const tooltipSprite = new THREE.Sprite(tooltipMaterial);
+                
+                // Position tooltip above the marker
+                const tooltipHeight = d.isCluster ? 4.5 : 3;
+                const tooltipWidth = d.isCluster ? 6 : 4.5;
+                tooltipSprite.position.set(0, (d.isCluster ? 5 : 2), 0.2);
+                tooltipSprite.scale.set(tooltipWidth, tooltipHeight, 1);
+                
+                group.add(tooltipSprite);
+              }
+              
+              return group;
             }}
             customThreeObjectUpdate={(obj: any, d: any) => {
               obj.position.set(0, 0, 0);
