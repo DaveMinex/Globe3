@@ -413,7 +413,7 @@ export const Earth: React.FC<EarthProps> = ({
     group.add(circle);
     group.add(innerBorder);
     
-    // Add text (count) with better formatting
+    // Add text (count) with better formatting - centered on cluster
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (context) {
@@ -446,6 +446,56 @@ export const Earth: React.FC<EarthProps> = ({
       const sprite = new THREE.Sprite(textMaterial);
       sprite.scale.set(size * 1.8, size * 1.8, 1);
       group.add(sprite);
+    }
+
+    // Create permanent floating number above cluster
+    const numberCanvas = document.createElement('canvas');
+    const numberContext = numberCanvas.getContext('2d');
+    if (numberContext) {
+      numberCanvas.width = 256;
+      numberCanvas.height = 128;
+      
+      // Create background for better readability
+      numberContext.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      numberContext.roundRect(10, 10, 236, 108, 15);
+      numberContext.fill();
+      
+      // Add white border
+      numberContext.strokeStyle = '#ffffff';
+      numberContext.lineWidth = 2;
+      numberContext.roundRect(10, 10, 236, 108, 15);
+      numberContext.stroke();
+      
+      // Add the count text
+      numberContext.fillStyle = '#ffffff';
+      numberContext.font = 'bold 48px Arial';
+      numberContext.textAlign = 'center';
+      numberContext.textBaseline = 'middle';
+      
+      // Format the display text
+      let displayText = count.toString();
+      if (count >= 1000000) {
+        displayText = (count / 1000000).toFixed(1) + 'M';
+      } else if (count >= 1000) {
+        displayText = (count / 1000).toFixed(1) + 'K';
+      }
+      
+      numberContext.fillText(displayText, 128, 64);
+      
+      const numberTexture = new THREE.CanvasTexture(numberCanvas);
+      const numberMaterial = new THREE.SpriteMaterial({ 
+        map: numberTexture,
+        transparent: true,
+        depthTest: false, // Always show on top
+        depthWrite: false
+      });
+      const numberSprite = new THREE.Sprite(numberMaterial);
+      
+      // Position above the cluster
+      numberSprite.position.set(0, size * 2.5, 0.1);
+      numberSprite.scale.set(size * 2, size * 1, 1);
+      
+      group.add(numberSprite);
     }
     
     return group;
