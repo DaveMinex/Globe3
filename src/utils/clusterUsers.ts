@@ -26,8 +26,8 @@ export function createClusterer(locations: Location[]) {
   }));
 
   const clusterer = new Supercluster({
-    radius: 60, // Optimized radius for better zoom performance
-    maxZoom: 20, // Increased max zoom for deeper drilling
+    radius: 80, // Larger radius for better clustering
+    maxZoom: 15, // Lower max zoom so clusters persist longer
     minZoom: 0,
     nodeSize: 64,
     extent: 512,

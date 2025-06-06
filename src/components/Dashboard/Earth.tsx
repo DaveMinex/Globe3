@@ -40,8 +40,8 @@ export const Earth: React.FC<EarthProps> = ({
   // Create clusterer on mount or when locations change
   useEffect(() => {
     const clusterer = new Supercluster({
-      radius: 60, // Optimized radius for better zoom performance
-      maxZoom: 20, // Increased max zoom for deeper drilling
+      radius: 80, // Larger radius for better clustering
+      maxZoom: 15, // Lower max zoom so clusters persist longer
       minZoom: 0,
       nodeSize: 64,
       extent: 512,
@@ -159,19 +159,10 @@ export const Earth: React.FC<EarthProps> = ({
     }
   };
 
-  // Show appropriate points based on zoom level
-  const visiblePoints = clusters.filter(d => {
-    if (d.isCluster) {
-      return zoom <= 12; // Show clusters at lower zoom levels
-    } else {
-      return zoom >= 6; // Show individual users at higher zoom levels
-    }
-  });
-
-  // Always show something - if no points match criteria, show all clusters
-  const finalPoints = visiblePoints.length > 0 ? visiblePoints : clusters.filter(d => d.isCluster);
+  // Always show all available points - let Supercluster handle the clustering logic
+  const finalPoints = clusters;
   
-  console.log('Zoom:', zoom, 'Total clusters:', clusters.length, 'Visible points:', visiblePoints.length, 'Final points:', finalPoints.length);
+  console.log('Zoom:', zoom, 'Total clusters:', clusters.length, 'Final points:', finalPoints.length);
   
   // Debug: Show breakdown of cluster types
   const clusterCount = clusters.filter(d => d.isCluster).length;
