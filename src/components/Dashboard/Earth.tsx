@@ -340,82 +340,67 @@ export const Earth: React.FC<EarthProps> = ({
     
     // Color coding based on count ranges like in reference image
     if (count < 10) {
-      pinColor = '#9C27B0'; // Purple for small clusters (5, 6, 8, 9)
+      pinColor = '#FF9800'; // Orange for small clusters
       textColor = '#ffffff';
-      pinSize = 1.5;
+      pinSize = 1.2;
     } else if (count < 20) {
-      pinColor = '#2196F3'; // Blue for medium clusters (10+)
+      pinColor = '#FF9800'; // Orange for medium clusters
       textColor = '#ffffff';
-      pinSize = 1.7;
+      pinSize = 1.4;
     } else if (count < 50) {
-      pinColor = '#4CAF50'; // Green for larger clusters (20+)
+      pinColor = '#FF9800'; // Orange for larger clusters
       textColor = '#ffffff';
-      pinSize = 1.9;
+      pinSize = 1.6;
     } else {
-      pinColor = '#F44336'; // Red for massive clusters (50+)
+      pinColor = '#FF9800'; // Orange for massive clusters
       textColor = '#ffffff';
-      pinSize = 2.1;
+      pinSize = 1.8;
     }
     
-    // Create pin-style marker with canvas
-    const pinCanvas = document.createElement('canvas');
-    const pinContext = pinCanvas.getContext('2d');
-    if (pinContext) {
-      const canvasSize = 256;
-      pinCanvas.width = canvasSize;
-      pinCanvas.height = canvasSize;
+    // Create simple circular marker
+    const circleGeometry = new THREE.CircleGeometry(0.15, 32);
+    const circleMaterial = new THREE.MeshBasicMaterial({ 
+      color: pinColor,
+      transparent: true,
+      opacity: 0.9,
+      depthTest: false,
+      depthWrite: false
+    });
+    const circle = new THREE.Mesh(circleGeometry, circleMaterial);
+    circle.position.set(0, 0, 0.05);
+    circle.renderOrder = 1;
+    group.add(circle);
+    
+    // Create always-visible label positioned above the marker
+    const labelCanvas = document.createElement('canvas');
+    const labelContext = labelCanvas.getContext('2d');
+    if (labelContext) {
+      const canvasSize = 512;
+      labelCanvas.width = canvasSize;
+      labelCanvas.height = canvasSize;
       
       // Clear canvas
-      pinContext.clearRect(0, 0, canvasSize, canvasSize);
+      labelContext.clearRect(0, 0, canvasSize, canvasSize);
       
-      // Draw pin shape (rounded rectangle with pointer)
-      const pinWidth = 120;
-      const pinHeight = 80;
-      const pinX = (canvasSize - pinWidth) / 2;
-      const pinY = 50;
-      const cornerRadius = 15;
-      const pointerHeight = 25;
+      // Create label background (rounded rectangle)
+      const labelWidth = 200;
+      const labelHeight = 80;
+      const labelX = (canvasSize - labelWidth) / 2;
+      const labelY = (canvasSize - labelHeight) / 2;
+      const cornerRadius = 8;
       
-      // Main pin body (rounded rectangle)
-      pinContext.fillStyle = pinColor;
-      pinContext.beginPath();
-      pinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
-      pinContext.fill();
+      // Background
+      labelContext.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      labelContext.beginPath();
+      labelContext.roundRect(labelX, labelY, labelWidth, labelHeight, cornerRadius);
+      labelContext.fill();
       
-      // Pin pointer (triangle at bottom)
-      pinContext.beginPath();
-      pinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight); // Point
-      pinContext.lineTo(pinX + pinWidth / 2 - 15, pinY + pinHeight); // Left
-      pinContext.lineTo(pinX + pinWidth / 2 + 15, pinY + pinHeight); // Right
-      pinContext.closePath();
-      pinContext.fill();
-      
-      // Add subtle border for better definition
-      pinContext.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-      pinContext.lineWidth = 2;
-      pinContext.beginPath();
-      pinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
-      pinContext.stroke();
-      
-      // Draw pointer border
-      pinContext.beginPath();
-      pinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight);
-      pinContext.lineTo(pinX + pinWidth / 2 - 15, pinY + pinHeight);
-      pinContext.lineTo(pinX + pinWidth / 2 + 15, pinY + pinHeight);
-      pinContext.closePath();
-      pinContext.stroke();
-      
-      // Add location count text in pin body - Reset shadow first
-      pinContext.shadowColor = 'transparent';
-      pinContext.shadowBlur = 0;
-      pinContext.shadowOffsetX = 0;
-      pinContext.shadowOffsetY = 0;
-      
-      // Set text properties for location count
-      pinContext.fillStyle = textColor;
-      pinContext.font = 'bold 24px Arial, sans-serif';
-      pinContext.textAlign = 'center';
-      pinContext.textBaseline = 'middle';
+      // Border
+      labelContext.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      labelContext.lineWidth = 2;
+      labelContext.beginPath();
+      labelContext.roundRect(labelX, labelY, labelWidth, labelHeight, cornerRadius);
+      labelContext.stroke();
       
       // Format the location count display text
       let displayText = count.toString();
@@ -427,18 +412,18 @@ export const Earth: React.FC<EarthProps> = ({
         displayText = count.toString();
       }
       
-      // Draw location count with high contrast outline first
-      pinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-      pinContext.lineWidth = 3;
-      pinContext.strokeText(displayText + ' locations', pinX + pinWidth / 2, pinY + pinHeight / 2 - 8);
+      // Location count text
+      labelContext.fillStyle = '#ffffff';
+      labelContext.font = 'bold 32px Arial, sans-serif';
+      labelContext.textAlign = 'center';
+      labelContext.textBaseline = 'middle';
       
-      // Then draw the main location count text
-      pinContext.fillStyle = '#ffffff';
-      pinContext.fillText(displayText + ' locations', pinX + pinWidth / 2, pinY + pinHeight / 2 - 8);
+      // Draw location count with outline for better visibility
+      labelContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+      labelContext.lineWidth = 4;
+      labelContext.strokeText(displayText + ' locations', labelX + labelWidth / 2, labelY + labelHeight / 2 - 12);
+      labelContext.fillText(displayText + ' locations', labelX + labelWidth / 2, labelY + labelHeight / 2 - 12);
 
-      // Add user count text below location count
-      pinContext.font = 'bold 20px Arial, sans-serif';
-      
       // Format the user count display text
       let userDisplayText = totalUsers.toString();
       if (totalUsers >= 1000000) {
@@ -449,42 +434,39 @@ export const Earth: React.FC<EarthProps> = ({
         userDisplayText = totalUsers.toString();
       }
       
-      // Draw user count with outline
-      pinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-      pinContext.lineWidth = 3;
-      pinContext.strokeText(userDisplayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2 + 12);
-      
-      // Then draw the main user count text in green
-      pinContext.fillStyle = '#4CAF50';
-      pinContext.fillText(userDisplayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2 + 12);
+      // User count text
+      labelContext.font = 'bold 28px Arial, sans-serif';
+      labelContext.strokeText(userDisplayText + ' users', labelX + labelWidth / 2, labelY + labelHeight / 2 + 12);
+      labelContext.fillStyle = '#4CAF50';
+      labelContext.fillText(userDisplayText + ' users', labelX + labelWidth / 2, labelY + labelHeight / 2 + 12);
       
       // Create sprite from canvas
-      const pinTexture = new THREE.CanvasTexture(pinCanvas);
-      pinTexture.needsUpdate = true;
-      pinTexture.flipY = false; // Important for proper canvas rendering
-      pinTexture.minFilter = THREE.LinearFilter;
-      pinTexture.magFilter = THREE.LinearFilter;
-      pinTexture.generateMipmaps = false;
+      const labelTexture = new THREE.CanvasTexture(labelCanvas);
+      labelTexture.needsUpdate = true;
+      labelTexture.flipY = false;
+      labelTexture.minFilter = THREE.LinearFilter;
+      labelTexture.magFilter = THREE.LinearFilter;
+      labelTexture.generateMipmaps = false;
       
-      const pinMaterial = new THREE.SpriteMaterial({ 
-        map: pinTexture,
+      const labelMaterial = new THREE.SpriteMaterial({ 
+        map: labelTexture,
         transparent: true,
         alphaTest: 0.01,
         depthTest: false,
         depthWrite: false
       });
-      const pinSprite = new THREE.Sprite(pinMaterial);
+      const labelSprite = new THREE.Sprite(labelMaterial);
       
-      // Fixed scale for better visibility
+      // Scale label based on camera distance
       const pov = globeRef.current?.pointOfView();
       const altitude = pov?.altitude || 2;
-      const scale = Math.max(1.0, Math.min(4.0, altitude * pinSize));
+      const scale = Math.max(0.8, Math.min(2.5, altitude * 1.2));
       
-      pinSprite.scale.set(scale, scale, 1);
-      pinSprite.position.set(0, 0, 0.1);
-      pinSprite.renderOrder = 1;
+      labelSprite.scale.set(scale, scale, 1);
+      labelSprite.position.set(0, 0, 0.8); // Position above the marker
+      labelSprite.renderOrder = 2;
       
-      group.add(pinSprite);
+      group.add(labelSprite);
     }
     
     // Add targeting box effect if this cluster is selected
@@ -505,72 +487,70 @@ export const Earth: React.FC<EarthProps> = ({
     
     // Get user count from properties
     const userCount = user.properties?.users || 1;
+    const city = user.properties?.city || 'Unknown';
     
-    // Create pin-style marker for individual users
-    const userPinCanvas = document.createElement('canvas');
-    const userPinContext = userPinCanvas.getContext('2d');
-    if (userPinContext) {
-      const canvasSize = 256;
-      userPinCanvas.width = canvasSize;
-      userPinCanvas.height = canvasSize;
+    // Determine color based on state
+    let markerColor = '#2196F3'; // Default blue
+    if (isSelected) markerColor = '#F44336'; // Red for selected
+    if (isHighlighted) markerColor = '#4CAF50'; // Green for highlighted
+    
+    // Create simple circular marker for individual users
+    const circleGeometry = new THREE.CircleGeometry(0.08, 32);
+    const circleMaterial = new THREE.MeshBasicMaterial({ 
+      color: markerColor,
+      transparent: true,
+      opacity: 0.9,
+      depthTest: false,
+      depthWrite: false
+    });
+    const circle = new THREE.Mesh(circleGeometry, circleMaterial);
+    circle.position.set(0, 0, 0.05);
+    circle.renderOrder = 1;
+    group.add(circle);
+    
+    // Create always-visible label for individual users
+    const labelCanvas = document.createElement('canvas');
+    const labelContext = labelCanvas.getContext('2d');
+    if (labelContext) {
+      const canvasSize = 512;
+      labelCanvas.width = canvasSize;
+      labelCanvas.height = canvasSize;
       
       // Clear canvas
-      userPinContext.clearRect(0, 0, canvasSize, canvasSize);
+      labelContext.clearRect(0, 0, canvasSize, canvasSize);
       
-      // Determine color based on state
-      let pinColor = '#9C27B0'; // Default purple
-      if (isSelected) pinColor = '#F44336'; // Red for selected
-      if (isHighlighted) pinColor = '#4CAF50'; // Green for highlighted
+      // Create label background
+      const labelWidth = 180;
+      const labelHeight = 70;
+      const labelX = (canvasSize - labelWidth) / 2;
+      const labelY = (canvasSize - labelHeight) / 2;
+      const cornerRadius = 6;
       
-      // Draw smaller pin for individual users
-      const pinWidth = 100;
-      const pinHeight = 70;
-      const pinX = (canvasSize - pinWidth) / 2;
-      const pinY = 60;
-      const cornerRadius = 12;
-      const pointerHeight = 20;
+      // Background
+      labelContext.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      labelContext.beginPath();
+      labelContext.roundRect(labelX, labelY, labelWidth, labelHeight, cornerRadius);
+      labelContext.fill();
       
-      // Main pin body
-      userPinContext.fillStyle = pinColor;
-      userPinContext.beginPath();
-      userPinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
-      userPinContext.fill();
+      // Border
+      labelContext.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      labelContext.lineWidth = 2;
+      labelContext.beginPath();
+      labelContext.roundRect(labelX, labelY, labelWidth, labelHeight, cornerRadius);
+      labelContext.stroke();
       
-      // Pin pointer
-      userPinContext.beginPath();
-      userPinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight);
-      userPinContext.lineTo(pinX + pinWidth / 2 - 12, pinY + pinHeight);
-      userPinContext.lineTo(pinX + pinWidth / 2 + 12, pinY + pinHeight);
-      userPinContext.closePath();
-      userPinContext.fill();
+      // City name text
+      labelContext.fillStyle = '#ffffff';
+      labelContext.font = 'bold 28px Arial, sans-serif';
+      labelContext.textAlign = 'center';
+      labelContext.textBaseline = 'middle';
       
-      // Add border
-      userPinContext.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-      userPinContext.lineWidth = 2;
-      userPinContext.beginPath();
-      userPinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
-      userPinContext.stroke();
-      
-      // Draw pointer border
-      userPinContext.beginPath();
-      userPinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight);
-      userPinContext.lineTo(pinX + pinWidth / 2 - 12, pinY + pinHeight);
-      userPinContext.lineTo(pinX + pinWidth / 2 + 12, pinY + pinHeight);
-      userPinContext.closePath();
-      userPinContext.stroke();
-      
-      // Add user count text - Reset shadow first
-      userPinContext.shadowColor = 'transparent';
-      userPinContext.shadowBlur = 0;
-      userPinContext.shadowOffsetX = 0;
-      userPinContext.shadowOffsetY = 0;
-      
-      // Set text properties for user count
-      userPinContext.fillStyle = '#ffffff';
-      userPinContext.font = 'bold 20px Arial, sans-serif';
-      userPinContext.textAlign = 'center';
-      userPinContext.textBaseline = 'middle';
-      
+      // Draw city name with outline
+      labelContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+      labelContext.lineWidth = 4;
+      labelContext.strokeText(city, labelX + labelWidth / 2, labelY + labelHeight / 2 - 10);
+      labelContext.fillText(city, labelX + labelWidth / 2, labelY + labelHeight / 2 - 10);
+
       // Format user count for display
       let displayText;
       if (userCount >= 1000000) {
@@ -581,42 +561,39 @@ export const Earth: React.FC<EarthProps> = ({
         displayText = userCount.toString();
       }
       
-      // Draw user count with high contrast outline first
-      userPinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-      userPinContext.lineWidth = 3;
-      userPinContext.strokeText(displayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2);
+      // User count text
+      labelContext.font = 'bold 24px Arial, sans-serif';
+      labelContext.strokeText(displayText + ' users', labelX + labelWidth / 2, labelY + labelHeight / 2 + 10);
+      labelContext.fillStyle = '#4CAF50';
+      labelContext.fillText(displayText + ' users', labelX + labelWidth / 2, labelY + labelHeight / 2 + 10);
       
-      // Then draw the main user count text in green
-      userPinContext.fillStyle = '#4CAF50';
-      userPinContext.fillText(displayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2);
+      // Create sprite from canvas
+      const labelTexture = new THREE.CanvasTexture(labelCanvas);
+      labelTexture.needsUpdate = true;
+      labelTexture.flipY = false;
+      labelTexture.minFilter = THREE.LinearFilter;
+      labelTexture.magFilter = THREE.LinearFilter;
+      labelTexture.generateMipmaps = false;
       
-      // Create sprite
-      const userPinTexture = new THREE.CanvasTexture(userPinCanvas);
-      userPinTexture.needsUpdate = true;
-      userPinTexture.flipY = false; // Important for proper canvas rendering
-      userPinTexture.minFilter = THREE.LinearFilter;
-      userPinTexture.magFilter = THREE.LinearFilter;
-      userPinTexture.generateMipmaps = false;
-      
-      const userPinMaterial = new THREE.SpriteMaterial({ 
-        map: userPinTexture,
+      const labelMaterial = new THREE.SpriteMaterial({ 
+        map: labelTexture,
         transparent: true,
         alphaTest: 0.01,
         depthTest: false,
         depthWrite: false
       });
-      const userPinSprite = new THREE.Sprite(userPinMaterial);
+      const labelSprite = new THREE.Sprite(labelMaterial);
       
-      // Scale based on camera distance (slightly smaller than clusters)
+      // Scale label based on camera distance
       const pov = globeRef.current?.pointOfView();
       const altitude = pov?.altitude || 2;
-      const scale = Math.max(0.8, Math.min(3.0, altitude * 1.0));
+      const scale = Math.max(0.6, Math.min(2.0, altitude * 1.0));
       
-      userPinSprite.scale.set(scale, scale, 1);
-      userPinSprite.position.set(0, 0, 0.1);
-      userPinSprite.renderOrder = 1;
+      labelSprite.scale.set(scale, scale, 1);
+      labelSprite.position.set(0, 0, 0.6); // Position above the marker
+      labelSprite.renderOrder = 2;
       
-      group.add(userPinSprite);
+      group.add(labelSprite);
     }
     
     // Add targeting box effect if selected
@@ -729,27 +706,7 @@ export const Earth: React.FC<EarthProps> = ({
             pointLat={(d: any) => d.lat}
             pointLng={(d: any) => d.lng}
             pointAltitude={0.001}
-            pointLabel={(d: any) => {
-              if (d.isCluster) {
-                const count = d.count || 0;
-                const totalUsers = d.properties?.totalUsers || count;
-                return `<div style="background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-                  <div style="text-align: center;">
-                    <div style="font-size: 16px; margin-bottom: 4px;">${count.toLocaleString()} locations</div>
-                    <div style="font-size: 14px; color: #4CAF50;">${totalUsers?.toLocaleString() || count.toLocaleString()} users</div>
-                  </div>
-                </div>`;
-              } else {
-                const userCount = d.properties?.users || 1;
-                const city = d.properties?.city || 'Unknown';
-                return `<div style="background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-                  <div style="text-align: center;">
-                    <div style="font-size: 16px; margin-bottom: 4px;">${city}</div>
-                    <div style="font-size: 14px; color: #4CAF50;">${userCount.toLocaleString()} users</div>
-                  </div>
-                </div>`;
-              }
-            }}
+            pointLabel={() => ''}
             pointColor={(d: any) => {
               if (d.isCluster) {
                 const count = d.count || 0;
