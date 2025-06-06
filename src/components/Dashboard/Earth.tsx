@@ -34,7 +34,7 @@ export const Earth: React.FC<EarthProps> = ({
 }) => {
   const [clusters, setClusters] = useState<ClusterFeature[]>([]);
   const [clusterer, setClusterer] = useState<any>(null);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(3);
   const [highlightedUsers, setHighlightedUsers] = useState<Location[]>([]);
 
   // Create clusterer on mount or when locations change
@@ -156,9 +156,14 @@ export const Earth: React.FC<EarthProps> = ({
 
   // Show clusters at low zoom, individual users at high zoom
   const visiblePoints = clusters.filter(d => {
-    if (d.isCluster) return zoom < 15; // Hide clusters when very zoomed in
-    return zoom >= 8; // Show individual users earlier for better granularity
+    if (d.isCluster) return zoom <= 10; // Show clusters at lower zoom levels
+    return zoom > 5; // Show individual users at higher zoom levels
   });
+
+  // If no points are visible due to filtering, show all points
+  const finalPoints = visiblePoints.length > 0 ? visiblePoints : clusters;
+  
+  console.log('Zoom:', zoom, 'Clusters:', clusters.length, 'Visible:', visiblePoints.length, 'Final:', finalPoints.length);
 
   return (
     <div className={`w-full h-[100vh] z-0 relative  translate-x-[-60px] ${viewMode === '2D' ? 'pointer-events-none' : ''}`}>
@@ -167,7 +172,7 @@ export const Earth: React.FC<EarthProps> = ({
           <Globe
             ref={globeRef}
             globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-            pointsData={visiblePoints}
+            pointsData={finalPoints}
             pointLat={(d: any) => d.lat}
             pointLng={(d: any) => d.lng}
             pointAltitude={0.001}
