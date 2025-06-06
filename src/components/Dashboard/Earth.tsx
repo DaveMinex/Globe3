@@ -44,7 +44,7 @@ export const Earth: React.FC<EarthProps> = ({
     setClusterer(newClusterer);
   }, [locations]);
 
-  // Calculate appropriate bounds based on camera position and altitude with much wider range
+  // Calculate camera view frustum bounds for proper visibility culling
   const calculateBounds = (): [number, number, number, number] => {
     if (!globeRef.current) return [-180, -85, 180, 85];
     
@@ -53,66 +53,94 @@ export const Earth: React.FC<EarthProps> = ({
     const centerLat = pov.lat || 0;
     const centerLng = pov.lng || 0;
     
-    // Much more aggressive bounds calculation for maximum cluster visibility
-    let latRange, lngRange;
+    // Calculate field of view based on camera settings
+    // react-globe.gl uses a default FOV of 50 degrees
+    const fov = 50; // degrees
+    const aspect = window.innerWidth / window.innerHeight;
     
-    if (altitude > 2.5) {
-      // Global view - show entire world
-      return [-180, -85, 180, 85];
-    } else if (altitude > 1.5) {
-      // Continental view - extremely wide range
-      latRange = 90; // Full latitude range
-      lngRange = 120; // Very wide longitude range
-    } else if (altitude > 1.0) {
-      // Regional view - very large range
-      latRange = 70 + (altitude - 1.0) * 40; // 70-90 degrees
-      lngRange = 90 + (altitude - 1.0) * 60; // 90-120 degrees
-    } else if (altitude > 0.7) {
-      // Country view - large range
-      latRange = 50 + (altitude - 0.7) * 66.67; // 50-70 degrees
-      lngRange = 70 + (altitude - 0.7) * 66.67; // 70-90 degrees
-    } else if (altitude > 0.5) {
-      // State/Province view - medium-large range
-      latRange = 30 + (altitude - 0.5) * 100; // 30-50 degrees
-      lngRange = 40 + (altitude - 0.5) * 150; // 40-70 degrees
-    } else if (altitude > 0.3) {
-      // City view - medium range
-      latRange = 15 + (altitude - 0.3) * 75; // 15-30 degrees
-      lngRange = 20 + (altitude - 0.3) * 100; // 20-40 degrees
-    } else if (altitude > 0.2) {
-      // District view - smaller range
-      latRange = 8 + (altitude - 0.2) * 70; // 8-15 degrees
-      lngRange = 12 + (altitude - 0.2) * 80; // 12-20 degrees
-    } else {
-      // Neighborhood view - focused range
-      latRange = 3 + altitude * 25; // 3-8 degrees
-      lngRange = 5 + altitude * 35; // 5-12 degrees
-    }
+    // Convert altitude to camera distance (globe radius is 100 in three.js units)
+    const earthRadius = 100;
+    const cameraDistance = earthRadius * altitude;
     
-    return [
-      Math.max(-180, centerLng - lngRange),
-      Math.max(-85, centerLat - latRange),
-      Math.min(180, centerLng + lngRange),
-      Math.min(85, centerLat + latRange)
-    ];
+    // Calculate the angular size of the visible area
+    const fovRadians = (fov * Math.PI) / 180;
+    const halfFovRadians = fovRadians / 2;
+    
+    // Calculate the radius of the visible circle on the Earth's surface
+    const visibleRadius = Math.tan(halfFovRadians) * cameraDistance;
+    
+    // Convert visible radius to degrees on Earth's surface
+    // Earth's circumference is ~40,075 km, so 1 degree = ~111 km
+    const kmPerDegree = 111.32; // km per degree at equator
+    const degreesPerKm = 1 / kmPerDegree;
+    
+    // Calculate the angular size in degrees
+    const angularSizeDegrees = (visibleRadius / earthRadius) * (180 / Math.PI);
+    
+    // Adjust for latitude compression (longitude lines get closer at higher latitudes)
+    const latitudeCompressionFactor = Math.cos((centerLat * Math.PI) / 180);
+    
+    // Calculate bounds with some padding for smooth transitions
+    const padding = Math.max(0.1, angularSizeDegrees * 0.1); // 10% padding
+    
+    const latRange = angularSizeDegrees + padding;
+    const lngRange = (angularSizeDegrees / latitudeCompressionFactor) + padding;
+    
+    // Ensure we don't exceed world bounds
+    const minLng = Math.max(-180, centerLng - lngRange);
+    const maxLng = Math.min(180, centerLng + lngRange);
+    const minLat = Math.max(-85, centerLat - latRange);
+    const maxLat = Math.min(85, centerLat + latRange);
+    
+    console.log('Camera view bounds:', {
+      altitude,
+      centerLat: centerLat.toFixed(2),
+      centerLng: centerLng.toFixed(2),
+      angularSize: angularSizeDegrees.toFixed(2),
+      bounds: [minLng.toFixed(2), minLat.toFixed(2), maxLng.toFixed(2), maxLat.toFixed(2)]
+    });
+    
+    return [minLng, minLat, maxLng, maxLat];
   };
 
-  // Update clusters based on current view
+  // Update clusters based on current view with real-time culling
   const updateClusters = () => {
     if (!clusterer) return;
     
     const bounds = calculateBounds();
     const newClusters = getClusters(clusterer, bounds, zoom);
     
+    // Additional filtering based on camera view (double-check visibility)
+    const pov = globeRef.current?.pointOfView();
+    const filteredClusters = newClusters.filter(cluster => {
+      if (!pov) return true;
+      
+      // Check if cluster is within a reasonable distance from camera center
+      const centerLat = pov.lat || 0;
+      const centerLng = pov.lng || 0;
+      const altitude = pov.altitude || 2;
+      
+      // Calculate angular distance from camera center
+      const latDiff = Math.abs(cluster.lat - centerLat);
+      const lngDiff = Math.abs(cluster.lng - centerLng);
+      
+      // Maximum visible angle based on altitude (more restrictive culling)
+      const maxVisibleAngle = Math.min(60, Math.max(5, 30 / altitude));
+      
+      return latDiff <= maxVisibleAngle && lngDiff <= maxVisibleAngle;
+    });
+    
     console.log('Updating clusters:', {
       zoom,
       bounds,
       totalClusters: newClusters.length,
-      clustersCount: newClusters.filter(c => c.isCluster).length,
-      individualPoints: newClusters.filter(c => !c.isCluster).length
+      filteredClusters: filteredClusters.length,
+      clustersCount: filteredClusters.filter(c => c.isCluster).length,
+      individualPoints: filteredClusters.filter(c => !c.isCluster).length,
+      cameraAltitude: pov?.altitude?.toFixed(3)
     });
     
-    setClusters(newClusters);
+    setClusters(filteredClusters);
   };
 
   useEffect(() => {
@@ -221,11 +249,14 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: pov.altitude || 2
       };
       
-      // Check if position changed significantly (avoid unnecessary updates)
+      // More sensitive position tracking for real-time culling
+      const altitude = newPosition.altitude;
+      const sensitivity = Math.max(0.01, altitude * 0.05); // Dynamic sensitivity based on altitude
+      
       const positionChanged = 
-        Math.abs(newPosition.lat - cameraPosition.lat) > 0.1 ||
-        Math.abs(newPosition.lng - cameraPosition.lng) > 0.1 ||
-        Math.abs(newPosition.altitude - cameraPosition.altitude) > 0.01;
+        Math.abs(newPosition.lat - cameraPosition.lat) > sensitivity ||
+        Math.abs(newPosition.lng - cameraPosition.lng) > sensitivity ||
+        Math.abs(newPosition.altitude - cameraPosition.altitude) > 0.005;
       
       if (positionChanged) {
         setCameraPosition(newPosition);
@@ -233,7 +264,7 @@ export const Earth: React.FC<EarthProps> = ({
         clearTimeout(updateTimeout);
         updateTimeout = setTimeout(() => {
           updateClusters();
-        }, 100); // Reduced timeout for more responsive updates
+        }, 50); // Faster updates for real-time culling
       }
     };
     

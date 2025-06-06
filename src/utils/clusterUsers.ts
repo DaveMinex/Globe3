@@ -58,7 +58,7 @@ export function getClusters(clusterer: Supercluster, bounds: [number, number, nu
   const clusters = clusterer.getClusters(bounds, Math.round(effectiveZoom));
   console.log('Raw clusters:', clusters.length, 'effective zoom:', effectiveZoom);
 
-  return clusters.map((c: any) => {
+  const result = clusters.map((c: any) => {
     if (c.properties.cluster) {
       return {
         id: c.id,
@@ -78,6 +78,17 @@ export function getClusters(clusterer: Supercluster, bounds: [number, number, nu
       };
     }
   });
+
+  // Debug: Check bounds coverage
+  const boundsWidth = bounds[2] - bounds[0];
+  const boundsHeight = bounds[3] - bounds[1];
+  console.log('Bounds coverage:', {
+    width: boundsWidth.toFixed(2),
+    height: boundsHeight.toFixed(2),
+    totalArea: (boundsWidth * boundsHeight).toFixed(2)
+  });
+
+  return result;
 }
 
 export function getClusterExpansionZoom(clusterer: Supercluster, clusterId: number): number {
