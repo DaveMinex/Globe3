@@ -79,9 +79,10 @@ export const Earth: React.FC<EarthProps> = ({
     const pov = globeRef.current.pointOfView();
     const altitude = pov.altitude || 2;
     
-    // Calculate bounds based on current view - smaller bounds = better clustering
-    const latRange = altitude * 40; // Smaller range for better clustering
-    const lngRange = altitude * 60;
+    // Calculate visible area based on altitude - smaller altitude = smaller visible area
+    const viewFactor = Math.max(0.5, Math.min(10, altitude)); // Clamp between 0.5 and 10
+    const latRange = viewFactor * 15; // Much smaller range for focused view
+    const lngRange = viewFactor * 20;
     
     const bounds: [number, number, number, number] = [
       Math.max(-180, (pov.lng || 0) - lngRange),
@@ -90,7 +91,7 @@ export const Earth: React.FC<EarthProps> = ({
       Math.min(85, (pov.lat || 0) + latRange)
     ];
     
-    console.log('Updating clusters with zoom:', zoom, 'bounds:', bounds);
+    console.log('Updating clusters with zoom:', zoom, 'altitude:', altitude, 'bounds:', bounds);
     const newClusters = getClusters(clusterer, bounds, zoom);
     console.log('New clusters:', newClusters.length);
     setClusters(newClusters);
@@ -164,14 +165,34 @@ export const Earth: React.FC<EarthProps> = ({
     };
   }, [globeRef.current]);
 
-  // Update clusters whenever zoom changes
+  // Update clusters whenever zoom changes or camera moves
   useEffect(() => {
     if (!clusterer) return;
-    const bounds: [number, number, number, number] = [-180, -85, 180, 85];
-    const newClusters = getClusters(clusterer, bounds, zoom);
-    console.log('Zoom level:', zoom, 'Clusters:', newClusters.length);
-    setClusters(newClusters);
+    updateClusters();
   }, [zoom, clusterer]);
+
+  // Listen to camera movements
+  useEffect(() => {
+    if (!globeRef.current) return;
+    
+    const globe = globeRef.current;
+    let updateTimeout: NodeJS.Timeout;
+    
+    const handleCameraMove = () => {
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => {
+        updateClusters();
+      }, 100); // Debounce updates
+    };
+    
+    // Add event listeners for camera movements
+    globe.controls().addEventListener('change', handleCameraMove);
+    
+    return () => {
+      globe.controls().removeEventListener('change', handleCameraMove);
+      clearTimeout(updateTimeout);
+    };
+  }, [clusterer]);
 
   // Handle point click (cluster or user)
   const handlePointClick = (point: any, event: MouseEvent, coords: { lat: number; lng: number; altitude: number; }) => {

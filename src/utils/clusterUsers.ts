@@ -47,11 +47,13 @@ export function createClusterer(locations: Location[]) {
 } 
 
 export function getClusters(clusterer: Supercluster, bounds: [number, number, number, number], zoom: number): ClusterFeature[] {
-  console.log('Getting clusters for zoom:', zoom);
-  // Use clamped zoom level for clustering
-  const effectiveZoom = Math.min(Math.max(zoom, 0), 6);
+  console.log('Getting clusters for zoom:', zoom, 'bounds:', bounds);
+
+  // At high zoom levels (close view), disable clustering to show individual users
+  const effectiveZoom = zoom > 10 ? 20 : Math.min(Math.max(zoom, 0), 12);
   const clusters = clusterer.getClusters(bounds, Math.round(effectiveZoom));
-  console.log('Raw clusters:', clusters.length);
+  console.log('Raw clusters:', clusters.length, 'effective zoom:', effectiveZoom);
+
   return clusters.map((c: any) => {
     if (c.properties.cluster) {
       return {
@@ -72,4 +74,4 @@ export function getClusters(clusterer: Supercluster, bounds: [number, number, nu
       };
     }
   });
-} 
+}
