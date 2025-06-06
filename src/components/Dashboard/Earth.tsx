@@ -405,19 +405,19 @@ export const Earth: React.FC<EarthProps> = ({
       pinContext.closePath();
       pinContext.stroke();
       
-      // Add text (user count) - Reset shadow first
+      // Add location count text in pin body - Reset shadow first
       pinContext.shadowColor = 'transparent';
       pinContext.shadowBlur = 0;
       pinContext.shadowOffsetX = 0;
       pinContext.shadowOffsetY = 0;
       
-      // Set text properties
+      // Set text properties for location count
       pinContext.fillStyle = textColor;
-      pinContext.font = 'bold 36px Arial, sans-serif';
+      pinContext.font = 'bold 24px Arial, sans-serif';
       pinContext.textAlign = 'center';
       pinContext.textBaseline = 'middle';
       
-      // Format the display text
+      // Format the location count display text
       let displayText = count.toString();
       if (count >= 1000) {
         displayText = Math.floor(count / 1000) + 'k';
@@ -427,14 +427,36 @@ export const Earth: React.FC<EarthProps> = ({
         displayText = count.toString();
       }
       
-      // Draw text with high contrast outline first
+      // Draw location count with high contrast outline first
       pinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-      pinContext.lineWidth = 4;
-      pinContext.strokeText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
+      pinContext.lineWidth = 3;
+      pinContext.strokeText(displayText + ' locations', pinX + pinWidth / 2, pinY + pinHeight / 2 - 8);
       
-      // Then draw the main text
+      // Then draw the main location count text
       pinContext.fillStyle = '#ffffff';
-      pinContext.fillText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
+      pinContext.fillText(displayText + ' locations', pinX + pinWidth / 2, pinY + pinHeight / 2 - 8);
+
+      // Add user count text below location count
+      pinContext.font = 'bold 20px Arial, sans-serif';
+      
+      // Format the user count display text
+      let userDisplayText = totalUsers.toString();
+      if (totalUsers >= 1000000) {
+        userDisplayText = (totalUsers / 1000000).toFixed(1) + 'M';
+      } else if (totalUsers >= 1000) {
+        userDisplayText = Math.floor(totalUsers / 1000) + 'k';
+      } else {
+        userDisplayText = totalUsers.toString();
+      }
+      
+      // Draw user count with outline
+      pinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+      pinContext.lineWidth = 3;
+      pinContext.strokeText(userDisplayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2 + 12);
+      
+      // Then draw the main user count text in green
+      pinContext.fillStyle = '#4CAF50';
+      pinContext.fillText(userDisplayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2 + 12);
       
       // Create sprite from canvas
       const pinTexture = new THREE.CanvasTexture(pinCanvas);
@@ -543,30 +565,30 @@ export const Earth: React.FC<EarthProps> = ({
       userPinContext.shadowOffsetX = 0;
       userPinContext.shadowOffsetY = 0;
       
-      // Set text properties
+      // Set text properties for user count
       userPinContext.fillStyle = '#ffffff';
-      userPinContext.font = 'bold 32px Arial, sans-serif';
+      userPinContext.font = 'bold 20px Arial, sans-serif';
       userPinContext.textAlign = 'center';
       userPinContext.textBaseline = 'middle';
       
       // Format user count for display
       let displayText;
-      if (userCount >= 1000) {
+      if (userCount >= 1000000) {
+        displayText = (userCount / 1000000).toFixed(1) + 'M';
+      } else if (userCount >= 1000) {
         displayText = Math.floor(userCount / 1000) + 'k';
-      } else if (userCount >= 100) {
-        displayText = Math.floor(userCount / 100) + '00+';
       } else {
         displayText = userCount.toString();
       }
       
-      // Draw text with high contrast outline first
+      // Draw user count with high contrast outline first
       userPinContext.strokeStyle = 'rgba(0, 0, 0, 0.8)';
       userPinContext.lineWidth = 3;
-      userPinContext.strokeText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
+      userPinContext.strokeText(displayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2);
       
-      // Then draw the main text
-      userPinContext.fillStyle = '#ffffff';
-      userPinContext.fillText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
+      // Then draw the main user count text in green
+      userPinContext.fillStyle = '#4CAF50';
+      userPinContext.fillText(displayText + ' users', pinX + pinWidth / 2, pinY + pinHeight / 2);
       
       // Create sprite
       const userPinTexture = new THREE.CanvasTexture(userPinCanvas);
