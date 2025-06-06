@@ -44,41 +44,46 @@ export const Earth: React.FC<EarthProps> = ({
     setClusterer(newClusterer);
   }, [locations]);
 
-  // Calculate appropriate bounds based on camera position and altitude
+  // Calculate appropriate bounds based on camera position and altitude with wider range
   const calculateBounds = (): [number, number, number, number] => {
     if (!globeRef.current) return [-180, -85, 180, 85];
     
     const pov = globeRef.current.pointOfView();
     const altitude = pov.altitude || 2;
-    
-    // Calculate visible area based on altitude
-    // At higher altitudes, show more area; at lower altitudes, show smaller area
-    let latRange, lngRange;
-    
-    if (altitude > 4) {
-      // Global view
-      latRange = 90;
-      lngRange = 180;
-    } else if (altitude > 2) {
-      // Continental view
-      latRange = 30 + (altitude - 2) * 30;
-      lngRange = 40 + (altitude - 2) * 40;
-    } else if (altitude > 1) {
-      // Country/Regional view
-      latRange = 10 + (altitude - 1) * 20;
-      lngRange = 15 + (altitude - 1) * 25;
-    } else if (altitude > 0.5) {
-      // City view
-      latRange = 2 + (altitude - 0.5) * 16;
-      lngRange = 3 + (altitude - 0.5) * 24;
-    } else {
-      // Neighborhood view
-      latRange = 0.5 + altitude * 3;
-      lngRange = 0.7 + altitude * 4;
-    }
-    
     const centerLat = pov.lat || 0;
     const centerLng = pov.lng || 0;
+    
+    // Much wider bounds calculation for better cluster visibility
+    let latRange, lngRange;
+    
+    if (altitude > 3) {
+      // Global view - show entire world
+      return [-180, -85, 180, 85];
+    } else if (altitude > 2) {
+      // Continental view - very wide range
+      latRange = 60 + (altitude - 2) * 30; // 60-90 degrees
+      lngRange = 80 + (altitude - 2) * 40; // 80-120 degrees
+    } else if (altitude > 1.5) {
+      // Regional view - large range
+      latRange = 40 + (altitude - 1.5) * 40; // 40-60 degrees
+      lngRange = 60 + (altitude - 1.5) * 40; // 60-80 degrees
+    } else if (altitude > 1) {
+      // Country view - medium range
+      latRange = 20 + (altitude - 1) * 40; // 20-40 degrees
+      lngRange = 30 + (altitude - 1) * 60; // 30-60 degrees
+    } else if (altitude > 0.5) {
+      // State/Province view
+      latRange = 8 + (altitude - 0.5) * 24; // 8-20 degrees
+      lngRange = 12 + (altitude - 0.5) * 36; // 12-30 degrees
+    } else if (altitude > 0.3) {
+      // City view
+      latRange = 3 + (altitude - 0.3) * 25; // 3-8 degrees
+      lngRange = 5 + (altitude - 0.3) * 35; // 5-12 degrees
+    } else {
+      // Neighborhood view - still quite wide
+      latRange = 1 + altitude * 6.67; // 1-3 degrees
+      lngRange = 1.5 + altitude * 11.67; // 1.5-5 degrees
+    }
     
     return [
       Math.max(-180, centerLng - lngRange),
@@ -136,26 +141,30 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: newAltitude
       }, 100);
 
-      // Map altitude to clustering zoom levels
+      // Progressive zoom level mapping for optimal clustering
       let zoomLevel;
-      if (newAltitude > 5) {
-        zoomLevel = 0; // Global clustering
+      if (newAltitude > 4) {
+        zoomLevel = 0; // Global clustering - maximum clustering
       } else if (newAltitude > 3) {
-        zoomLevel = 1; // Continental clustering
+        zoomLevel = 2; // Continental clustering
+      } else if (newAltitude > 2.5) {
+        zoomLevel = 4; // Country clustering
       } else if (newAltitude > 2) {
-        zoomLevel = 3; // Country clustering
+        zoomLevel = 6; // Regional clustering
       } else if (newAltitude > 1.5) {
-        zoomLevel = 5; // Regional clustering
+        zoomLevel = 8; // State/Province clustering
       } else if (newAltitude > 1) {
-        zoomLevel = 7; // City clustering
+        zoomLevel = 10; // City clustering
       } else if (newAltitude > 0.7) {
-        zoomLevel = 9; // District clustering
-      } else if (newAltitude > 0.4) {
-        zoomLevel = 11; // Neighborhood clustering
-      } else if (newAltitude > 0.2) {
-        zoomLevel = 13; // Street clustering
+        zoomLevel = 12; // District clustering
+      } else if (newAltitude > 0.5) {
+        zoomLevel = 14; // Neighborhood clustering
+      } else if (newAltitude > 0.3) {
+        zoomLevel = 16; // Street clustering
+      } else if (newAltitude > 0.15) {
+        zoomLevel = 18; // Block clustering - minimal clustering
       } else {
-        zoomLevel = 16; // Individual points
+        zoomLevel = 20; // Individual points only
       }
       
       console.log('Altitude:', newAltitude.toFixed(3), 'Zoom level:', zoomLevel);
@@ -240,69 +249,116 @@ export const Earth: React.FC<EarthProps> = ({
     }
   };
 
-  // Create Google Maps-style cluster markers
+  // Create enhanced Google Maps-style cluster markers
   const createClusterMarker = (cluster: ClusterFeature) => {
     const group = new THREE.Group();
     
-    // Determine cluster size and color based on count
+    // Determine cluster size and color based on count with better scaling
     const count = cluster.count || 0;
-    let size, color, textColor;
+    const totalUsers = cluster.properties?.totalUsers || count;
+    let size, color, textColor, borderColor;
     
-    if (count < 10) {
-      size = 1.2;
+    // More nuanced size and color scaling
+    if (count < 5) {
+      size = 0.8;
       color = 0x4285f4; // Google blue
+      borderColor = 0x1a73e8;
+      textColor = '#ffffff';
+    } else if (count < 10) {
+      size = 1.0;
+      color = 0x4285f4; // Google blue
+      borderColor = 0x1a73e8;
+      textColor = '#ffffff';
+    } else if (count < 50) {
+      size = 1.3;
+      color = 0xea4335; // Google red
+      borderColor = 0xd93025;
       textColor = '#ffffff';
     } else if (count < 100) {
-      size = 1.8;
+      size = 1.6;
       color = 0xea4335; // Google red
+      borderColor = 0xd93025;
       textColor = '#ffffff';
+    } else if (count < 500) {
+      size = 2.0;
+      color = 0xfbbc04; // Google yellow
+      borderColor = 0xf9ab00;
+      textColor = '#000000';
     } else if (count < 1000) {
       size = 2.4;
       color = 0xfbbc04; // Google yellow
+      borderColor = 0xf9ab00;
       textColor = '#000000';
     } else {
-      size = 3.0;
+      size = 2.8;
       color = 0x34a853; // Google green
+      borderColor = 0x137333;
       textColor = '#ffffff';
     }
     
-    // Create cluster circle
+    // Create main cluster circle with gradient effect
     const geometry = new THREE.CircleGeometry(size, 32);
     const material = new THREE.MeshBasicMaterial({ 
       color: color,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.9
     });
     const circle = new THREE.Mesh(geometry, material);
     
-    // Create border
-    const borderGeometry = new THREE.RingGeometry(size * 0.9, size, 32);
-    const borderMaterial = new THREE.MeshBasicMaterial({ 
+    // Create outer border for better visibility
+    const outerBorderGeometry = new THREE.RingGeometry(size, size * 1.1, 32);
+    const outerBorderMaterial = new THREE.MeshBasicMaterial({ 
+      color: borderColor,
+      transparent: true,
+      opacity: 0.8
+    });
+    const outerBorder = new THREE.Mesh(outerBorderGeometry, outerBorderMaterial);
+    
+    // Create inner white border
+    const innerBorderGeometry = new THREE.RingGeometry(size * 0.85, size, 32);
+    const innerBorderMaterial = new THREE.MeshBasicMaterial({ 
       color: 0xffffff,
       transparent: true,
-      opacity: 0.9
+      opacity: 1.0
     });
-    const border = new THREE.Mesh(borderGeometry, borderMaterial);
+    const innerBorder = new THREE.Mesh(innerBorderGeometry, innerBorderMaterial);
     
+    group.add(outerBorder);
     group.add(circle);
-    group.add(border);
+    group.add(innerBorder);
     
-    // Add text (count) - using a simple approach
+    // Add text (count) with better formatting
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (context) {
       canvas.width = 256;
       canvas.height = 256;
       context.fillStyle = textColor;
-      context.font = 'bold 80px Arial';
+      
+      // Adjust font size based on number length
+      const textLength = count.toString().length;
+      let fontSize = 80;
+      if (textLength > 3) fontSize = 60;
+      if (textLength > 4) fontSize = 50;
+      
+      context.font = `bold ${fontSize}px Arial`;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
-      context.fillText(count.toString(), 128, 128);
+      
+      // Format large numbers (1k, 10k, etc.)
+      let displayText = count.toString();
+      if (count >= 1000000) {
+        displayText = (count / 1000000).toFixed(1) + 'M';
+      } else if (count >= 1000) {
+        displayText = (count / 1000).toFixed(1) + 'K';
+      }
+      
+      context.fillText(displayText, 128, 128);
       
       const texture = new THREE.CanvasTexture(canvas);
       const textMaterial = new THREE.SpriteMaterial({ map: texture });
       const sprite = new THREE.Sprite(textMaterial);
-      sprite.scale.set(size * 1.5, size * 1.5, 1);
+      sprite.scale.set(size * 1.8, size * 1.8, 1);
       group.add(sprite);
     }
     
@@ -349,8 +405,15 @@ export const Earth: React.FC<EarthProps> = ({
             pointAltitude={0.001}
             pointLabel={(d: any) =>
               d.isCluster
-                ? `<div class='bg-white p-3 rounded-lg shadow-lg border'><div class='font-bold text-gray-800 text-lg'>${d.count} users</div><div class='text-sm text-gray-600'>Click to zoom in</div></div>`
-                : `<div class='bg-white p-2 rounded-lg shadow-lg border'><div class='font-bold text-gray-800'>${d.properties.city}</div><div class='text-sm text-gray-600'>${d.properties.users} users</div></div>`
+                ? `<div class='bg-white p-3 rounded-lg shadow-lg border max-w-xs'>
+                     <div class='font-bold text-gray-800 text-lg'>${d.count.toLocaleString()} locations</div>
+                     <div class='text-sm text-gray-600'>${(d.properties?.totalUsers || d.count).toLocaleString()} total users</div>
+                     <div class='text-xs text-blue-600 mt-1'>Click to zoom in</div>
+                   </div>`
+                : `<div class='bg-white p-2 rounded-lg shadow-lg border'>
+                     <div class='font-bold text-gray-800'>${d.properties.city}</div>
+                     <div class='text-sm text-gray-600'>${d.properties.users.toLocaleString()} users</div>
+                   </div>`
             }
             pointColor={(d: any) => {
               if (d.isCluster) {
@@ -363,7 +426,20 @@ export const Earth: React.FC<EarthProps> = ({
               if (highlightedUsers.some(u => u.lat === d.lat && u.lng === d.lng)) return '#00ff00';
               return '#ffeb3b';
             }}
-            pointRadius={(d: any) => d.isCluster ? 0.15 + Math.min(0.3, (d.count || 0) / 1000) : 0.05}
+            pointRadius={(d: any) => {
+              if (d.isCluster) {
+                const count = d.count || 0;
+                // Progressive radius scaling for clusters
+                if (count < 5) return 0.08;
+                if (count < 10) return 0.12;
+                if (count < 50) return 0.16;
+                if (count < 100) return 0.20;
+                if (count < 500) return 0.25;
+                if (count < 1000) return 0.30;
+                return 0.35;
+              }
+              return 0.04; // Individual users
+            }}
             onPointClick={handlePointClick}
             width={window.innerWidth}
             height={window.innerHeight}
