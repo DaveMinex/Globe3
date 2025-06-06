@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { GlowingRippleDot } from "./GlowingRippleDot";
 import { createClusterer, getClusters, ClusterFeature } from '../../utils/clusterUsers';
 import { usersWithinRadius } from '../../utils/geo';
+import Supercluster from 'supercluster';
 
 interface Location {
   lat: number;
@@ -38,8 +39,21 @@ export const Earth: React.FC<EarthProps> = ({
 
   // Create clusterer on mount or when locations change
   useEffect(() => {
-    const c = createClusterer(locations);
-    setClusterer(c);
+    const clusterer = new Supercluster({
+      radius: 60, // Optimized radius for better zoom performance
+      maxZoom: 20, // Increased max zoom for deeper drilling
+      minZoom: 0,
+      nodeSize: 64,
+      extent: 512,
+      reduce: (acc, props) => {
+        acc.point_count = (acc.point_count || 0) + 1;
+      },
+      map: (props) => ({
+        point_count: 1
+      })
+    });
+    clusterer.load(locations);
+    setClusterer(clusterer);
   }, [locations]);
 
   // Update clusters on zoom or move
