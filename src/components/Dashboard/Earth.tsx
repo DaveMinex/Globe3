@@ -34,7 +34,7 @@ export const Earth: React.FC<EarthProps> = ({
 }) => {
   const [clusters, setClusters] = useState<ClusterFeature[]>([]);
   const [clusterer, setClusterer] = useState<any>(null);
-  const [zoom, setZoom] = useState(3);
+  const [zoom, setZoom] = useState(8);
   const [highlightedUsers, setHighlightedUsers] = useState<Location[]>([]);
 
   // Create clusterer on mount or when locations change
@@ -101,10 +101,15 @@ export const Earth: React.FC<EarthProps> = ({
         altitude: newAltitude
       }, 30); // Smoother animation
 
-      // Calculate zoom level with extended range and better mapping
-      const normalizedAltitude = (newAltitude - 0.01) / (10 - 0.01);
+      // Calculate zoom level with better mapping - higher altitude = lower zoom
+      const minAlt = 0.01;
+      const maxAlt = 10;
+      const clampedAltitude = Math.max(minAlt, Math.min(maxAlt, newAltitude));
+      const normalizedAltitude = (clampedAltitude - minAlt) / (maxAlt - minAlt);
       const zoomLevel = Math.round(20 * (1 - normalizedAltitude));
-      setZoom(Math.max(0, Math.min(20, zoomLevel)));
+      const finalZoom = Math.max(0, Math.min(20, zoomLevel));
+      console.log('Altitude:', newAltitude, 'Normalized:', normalizedAltitude, 'Zoom:', finalZoom);
+      setZoom(finalZoom);
       
       // Reset handling flag after a brief delay
       setTimeout(() => {
@@ -154,16 +159,24 @@ export const Earth: React.FC<EarthProps> = ({
     }
   };
 
-  // Show clusters at low zoom, individual users at high zoom
+  // Show appropriate points based on zoom level
   const visiblePoints = clusters.filter(d => {
-    if (d.isCluster) return zoom <= 10; // Show clusters at lower zoom levels
-    return zoom > 5; // Show individual users at higher zoom levels
+    if (d.isCluster) {
+      return zoom <= 12; // Show clusters at lower zoom levels
+    } else {
+      return zoom >= 6; // Show individual users at higher zoom levels
+    }
   });
 
-  // If no points are visible due to filtering, show all points
-  const finalPoints = visiblePoints.length > 0 ? visiblePoints : clusters;
+  // Always show something - if no points match criteria, show all clusters
+  const finalPoints = visiblePoints.length > 0 ? visiblePoints : clusters.filter(d => d.isCluster);
   
-  console.log('Zoom:', zoom, 'Clusters:', clusters.length, 'Visible:', visiblePoints.length, 'Final:', finalPoints.length);
+  console.log('Zoom:', zoom, 'Total clusters:', clusters.length, 'Visible points:', visiblePoints.length, 'Final points:', finalPoints.length);
+  
+  // Debug: Show breakdown of cluster types
+  const clusterCount = clusters.filter(d => d.isCluster).length;
+  const userCount = clusters.filter(d => !d.isCluster).length;
+  console.log('Breakdown - Clusters:', clusterCount, 'Individual users:', userCount);
 
   return (
     <div className={`w-full h-[100vh] z-0 relative  translate-x-[-60px] ${viewMode === '2D' ? 'pointer-events-none' : ''}`}>
