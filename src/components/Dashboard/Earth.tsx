@@ -342,19 +342,19 @@ export const Earth: React.FC<EarthProps> = ({
     if (count < 10) {
       pinColor = '#9C27B0'; // Purple for small clusters (5, 6, 8, 9)
       textColor = '#ffffff';
-      pinSize = 1.2;
+      pinSize = 1.5;
     } else if (count < 20) {
       pinColor = '#2196F3'; // Blue for medium clusters (10+)
       textColor = '#ffffff';
-      pinSize = 1.4;
+      pinSize = 1.7;
     } else if (count < 50) {
       pinColor = '#4CAF50'; // Green for larger clusters (20+)
       textColor = '#ffffff';
-      pinSize = 1.6;
+      pinSize = 1.9;
     } else {
       pinColor = '#F44336'; // Red for massive clusters (50+)
       textColor = '#ffffff';
-      pinSize = 1.8;
+      pinSize = 2.1;
     }
     
     // Create pin-style marker with canvas
@@ -432,22 +432,25 @@ export const Earth: React.FC<EarthProps> = ({
       // Create sprite from canvas
       const pinTexture = new THREE.CanvasTexture(pinCanvas);
       pinTexture.needsUpdate = true;
+      pinTexture.flipY = false; // Important for proper canvas rendering
+      
       const pinMaterial = new THREE.SpriteMaterial({ 
         map: pinTexture,
         transparent: true,
-        depthTest: false,
-        depthWrite: false,
-        alphaTest: 0.1
+        alphaTest: 0.01,
+        depthTest: true,
+        depthWrite: false
       });
       const pinSprite = new THREE.Sprite(pinMaterial);
       
-      // Scale based on camera distance
+      // Fixed scale for better visibility
       const pov = globeRef.current?.pointOfView();
       const altitude = pov?.altitude || 2;
-      const scale = Math.max(0.8, Math.min(3.0, altitude * pinSize));
+      const scale = Math.max(1.0, Math.min(4.0, altitude * pinSize));
       
       pinSprite.scale.set(scale, scale, 1);
       pinSprite.position.set(0, 0, 0.1);
+      pinSprite.renderOrder = 1;
       
       group.add(pinSprite);
     }
@@ -551,22 +554,25 @@ export const Earth: React.FC<EarthProps> = ({
       // Create sprite
       const userPinTexture = new THREE.CanvasTexture(userPinCanvas);
       userPinTexture.needsUpdate = true;
+      userPinTexture.flipY = false; // Important for proper canvas rendering
+      
       const userPinMaterial = new THREE.SpriteMaterial({ 
         map: userPinTexture,
         transparent: true,
-        depthTest: false,
-        depthWrite: false,
-        alphaTest: 0.1
+        alphaTest: 0.01,
+        depthTest: true,
+        depthWrite: false
       });
       const userPinSprite = new THREE.Sprite(userPinMaterial);
       
       // Scale based on camera distance (slightly smaller than clusters)
       const pov = globeRef.current?.pointOfView();
       const altitude = pov?.altitude || 2;
-      const scale = Math.max(0.6, Math.min(2.0, altitude * 0.8));
+      const scale = Math.max(0.8, Math.min(3.0, altitude * 1.0));
       
       userPinSprite.scale.set(scale, scale, 1);
       userPinSprite.position.set(0, 0, 0.1);
+      userPinSprite.renderOrder = 1;
       
       group.add(userPinSprite);
     }
@@ -717,23 +723,39 @@ export const Earth: React.FC<EarthProps> = ({
             atmosphereAltitude={0.1}
             customThreeObject={(d: any) => {
               // Create the appropriate marker type
-              return d.isCluster ? createClusterMarker(d) : createUserMarker(d);
+              if (d.isCluster) {
+                return createClusterMarker(d);
+              } else {
+                return createUserMarker(d);
+              }
             }}
             customThreeObjectUpdate={(obj: any, d: any) => {
-              obj.position.set(0, 0, 0);
+              // Always ensure the object is positioned correctly
+              Object3D.prototype.position.set.call(obj, 0, 0, 0);
+              
+              // Update scale based on camera distance for better visibility
+              const pov = globeRef.current?.pointOfView();
+              const altitude = pov?.altitude || 2;
+              const baseScale = d.isCluster ? 1.2 : 0.8;
+              const scale = Math.max(0.5, Math.min(3.0, altitude * baseScale));
+              
+              // Update all sprite children to maintain proper scale
+              obj.children.forEach((child: any) => {
+                if (child.type === 'Sprite') {
+                  child.scale.set(scale, scale, 1);
+                }
+              });
               
               // Update targeting box animation if this point is selected
               const isTargeted = selectedPoint && selectedPoint.id === d.id;
               if (isTargeted) {
                 // Find and update the targeting box animation
                 obj.children.forEach((child: any) => {
-                  child.children?.forEach((subChild: any) => {
-                    if (subChild.userData && subChild.userData.isTargetingBox) {
-                      const scale = 1 + Math.sin(Date.now() * 0.008) * 0.15;
-                      subChild.scale.set(scale, scale, scale);
-                      subChild.rotation.z = Date.now() * 0.002;
-                    }
-                  });
+                  if (child.userData && child.userData.isTargetingBox) {
+                    const animScale = 1 + Math.sin(Date.now() * 0.008) * 0.15;
+                    child.scale.set(animScale, animScale, animScale);
+                    child.rotation.z = Date.now() * 0.002;
+                  }
                 });
               }
             }}
