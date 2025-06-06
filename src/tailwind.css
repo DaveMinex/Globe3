@@ -583,10 +583,6 @@ video {
   pointer-events: none;
 }
 
-.visible {
-  visibility: visible;
-}
-
 .static {
   position: static;
 }
@@ -1188,6 +1184,10 @@ video {
 
 .max-w-\[1440px\] {
   max-width: 1440px;
+}
+
+.max-w-xs {
+  max-width: 20rem;
 }
 
 .flex-1 {
