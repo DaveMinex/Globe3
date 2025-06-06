@@ -329,251 +329,133 @@ export const Earth: React.FC<EarthProps> = ({
     }
   };
 
-  // Create enhanced Google Maps-style cluster markers with better scaling
+  // Create pin-style markers like in the reference image
   const createClusterMarker = (cluster: ClusterFeature) => {
     const group = new THREE.Group();
     
-    // Determine cluster size and color based on count with improved scaling
+    // Determine cluster size and color based on count
     const count = cluster.count || 0;
     const totalUsers = cluster.properties?.totalUsers || count;
-    let size, color, textColor, borderColor;
+    let pinColor, textColor, pinSize;
     
-    // Enhanced size and color scaling for better visual hierarchy
-    if (count < 3) {
-      size = 1.0;
-      color = 0x4285f4; // Google blue
-      borderColor = 0x1a73e8;
+    // Color coding based on count ranges like in reference image
+    if (count < 10) {
+      pinColor = '#9C27B0'; // Purple for small clusters (5, 6, 8, 9)
       textColor = '#ffffff';
-    } else if (count < 10) {
-      size = 1.3;
-      color = 0x4285f4; // Google blue
-      borderColor = 0x1a73e8;
+      pinSize = 1.2;
+    } else if (count < 20) {
+      pinColor = '#2196F3'; // Blue for medium clusters (10+)
       textColor = '#ffffff';
-    } else if (count < 25) {
-      size = 1.6;
-      color = 0x4285f4; // Google blue
-      borderColor = 0x1a73e8;
-      textColor = '#ffffff';
+      pinSize = 1.4;
     } else if (count < 50) {
-      size = 2.0;
-      color = 0xea4335; // Google red
-      borderColor = 0xd93025;
+      pinColor = '#4CAF50'; // Green for larger clusters (20+)
       textColor = '#ffffff';
-    } else if (count < 100) {
-      size = 2.4;
-      color = 0xea4335; // Google red
-      borderColor = 0xd93025;
-      textColor = '#ffffff';
-    } else if (count < 250) {
-      size = 2.8;
-      color = 0xfbbc04; // Google yellow
-      borderColor = 0xf9ab00;
-      textColor = '#000000';
-    } else if (count < 500) {
-      size = 3.2;
-      color = 0xfbbc04; // Google yellow
-      borderColor = 0xf9ab00;
-      textColor = '#000000';
-    } else if (count < 1000) {
-      size = 3.6;
-      color = 0x34a853; // Google green
-      borderColor = 0x137333;
-      textColor = '#ffffff';
+      pinSize = 1.6;
     } else {
-      size = 4.0;
-      color = 0x9c27b0; // Purple for massive clusters
-      borderColor = 0x7b1fa2;
+      pinColor = '#F44336'; // Red for massive clusters (50+)
       textColor = '#ffffff';
+      pinSize = 1.8;
     }
     
-    // Create main cluster circle with gradient effect
-    const geometry = new THREE.CircleGeometry(size, 32);
-    const material = new THREE.MeshBasicMaterial({ 
-      color: color,
-      transparent: true,
-      opacity: 0.9
-    });
-    const circle = new THREE.Mesh(geometry, material);
-    
-    // Create outer border for better visibility
-    const outerBorderGeometry = new THREE.RingGeometry(size, size * 1.1, 32);
-    const outerBorderMaterial = new THREE.MeshBasicMaterial({ 
-      color: borderColor,
-      transparent: true,
-      opacity: 0.8
-    });
-    const outerBorder = new THREE.Mesh(outerBorderGeometry, outerBorderMaterial);
-    
-    // Create inner white border
-    const innerBorderGeometry = new THREE.RingGeometry(size * 0.85, size, 32);
-    const innerBorderMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0xffffff,
-      transparent: true,
-      opacity: 1.0
-    });
-    const innerBorder = new THREE.Mesh(innerBorderGeometry, innerBorderMaterial);
-    
-    group.add(outerBorder);
-    group.add(circle);
-    group.add(innerBorder);
-    
-    // Add text (count) with better formatting - centered on cluster
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (context) {
-      canvas.width = 512;
-      canvas.height = 512;
-      
-      // Clear canvas with transparent background
-      context.clearRect(0, 0, 512, 512);
-      
-      // Adjust font size based on number length and cluster size
-      const textLength = count.toString().length;
-      let fontSize = Math.max(60, 120 - textLength * 15);
-      
-      context.font = `bold ${fontSize}px Arial, sans-serif`;
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      
-      // Format large numbers (1k, 10k, etc.)
-      let displayText = count.toString();
-      if (count >= 1000000) {
-        displayText = (count / 1000000).toFixed(1) + 'M';
-      } else if (count >= 1000) {
-        displayText = (count / 1000).toFixed(1) + 'K';
-      }
-      
-      // Add text shadow for better visibility
-      context.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      context.shadowBlur = 4;
-      context.shadowOffsetX = 2;
-      context.shadowOffsetY = 2;
-      
-      context.fillStyle = textColor;
-      context.fillText(displayText, 256, 256);
-      
-      // Remove shadow for crisp text
-      context.shadowColor = 'transparent';
-      context.shadowBlur = 0;
-      context.shadowOffsetX = 0;
-      context.shadowOffsetY = 0;
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.needsUpdate = true;
-      const textMaterial = new THREE.SpriteMaterial({ 
-        map: texture,
-        transparent: true,
-        alphaTest: 0.1
-      });
-      const sprite = new THREE.Sprite(textMaterial);
-      sprite.scale.set(size * 2.2, size * 2.2, 1);
-      group.add(sprite);
-    }
-
-    // Create permanent floating number above cluster with better visibility
-    const numberCanvas = document.createElement('canvas');
-    const numberContext = numberCanvas.getContext('2d');
-    if (numberContext) {
-      // Get current camera distance for scaling
-      const pov = globeRef.current?.pointOfView();
-      const altitude = pov?.altitude || 2;
-      
-      // Scale label size based on distance - closer = smaller labels, farther = larger labels
-      const distanceScale = Math.max(0.5, Math.min(2.0, altitude * 1.5));
-      
-      const baseWidth = 400;
-      const baseHeight = 160;
-      numberCanvas.width = Math.floor(baseWidth * distanceScale);
-      numberCanvas.height = Math.floor(baseHeight * distanceScale);
+    // Create pin-style marker with canvas
+    const pinCanvas = document.createElement('canvas');
+    const pinContext = pinCanvas.getContext('2d');
+    if (pinContext) {
+      const canvasSize = 256;
+      pinCanvas.width = canvasSize;
+      pinCanvas.height = canvasSize;
       
       // Clear canvas
-      numberContext.clearRect(0, 0, numberCanvas.width, numberCanvas.height);
+      pinContext.clearRect(0, 0, canvasSize, canvasSize);
       
-      // Create rounded background for better readability
-      const bgWidth = Math.floor(380 * distanceScale);
-      const bgHeight = Math.floor(140 * distanceScale);
-      const bgX = Math.floor(10 * distanceScale);
-      const bgY = Math.floor(10 * distanceScale);
-      const cornerRadius = Math.floor(20 * distanceScale);
+      // Draw pin shape (rounded rectangle with pointer)
+      const pinWidth = 120;
+      const pinHeight = 80;
+      const pinX = (canvasSize - pinWidth) / 2;
+      const pinY = 50;
+      const cornerRadius = 15;
+      const pointerHeight = 25;
       
-      // Background with gradient
-      const gradient = numberContext.createLinearGradient(0, 0, 0, bgHeight);
-      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
-      gradient.addColorStop(1, 'rgba(30, 30, 30, 0.9)');
+      // Main pin body (rounded rectangle)
+      pinContext.fillStyle = pinColor;
+      pinContext.beginPath();
+      pinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
+      pinContext.fill();
       
-      numberContext.fillStyle = gradient;
-      numberContext.beginPath();
-      numberContext.roundRect(bgX, bgY, bgWidth, bgHeight, cornerRadius);
-      numberContext.fill();
+      // Pin pointer (triangle at bottom)
+      pinContext.beginPath();
+      pinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight); // Point
+      pinContext.lineTo(pinX + pinWidth / 2 - 15, pinY + pinHeight); // Left
+      pinContext.lineTo(pinX + pinWidth / 2 + 15, pinY + pinHeight); // Right
+      pinContext.closePath();
+      pinContext.fill();
       
-      // Add glowing border with scaled thickness
-      numberContext.strokeStyle = '#ffffff';
-      numberContext.lineWidth = Math.max(1, 3 * distanceScale);
-      numberContext.shadowColor = '#ffffff';
-      numberContext.shadowBlur = Math.max(3, 10 * distanceScale);
-      numberContext.beginPath();
-      numberContext.roundRect(bgX, bgY, bgWidth, bgHeight, cornerRadius);
-      numberContext.stroke();
+      // Add subtle border for better definition
+      pinContext.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      pinContext.lineWidth = 2;
+      pinContext.beginPath();
+      pinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
+      pinContext.stroke();
       
-      // Reset shadow for text
-      numberContext.shadowColor = 'transparent';
-      numberContext.shadowBlur = 0;
+      // Draw pointer border
+      pinContext.beginPath();
+      pinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight);
+      pinContext.lineTo(pinX + pinWidth / 2 - 15, pinY + pinHeight);
+      pinContext.lineTo(pinX + pinWidth / 2 + 15, pinY + pinHeight);
+      pinContext.closePath();
+      pinContext.stroke();
       
-      // Add the count text with better formatting
-      numberContext.fillStyle = '#ffffff';
-      
-      // Adjust font size based on text length and distance
-      const textLength = count.toString().length;
-      let baseFontSize = textLength > 4 ? 50 : textLength > 3 ? 60 : 70;
-      let fontSize = Math.floor(baseFontSize * distanceScale);
-      
-      numberContext.font = `bold ${fontSize}px Arial, sans-serif`;
-      numberContext.textAlign = 'center';
-      numberContext.textBaseline = 'middle';
+      // Add text (user count)
+      pinContext.fillStyle = textColor;
+      pinContext.font = 'bold 32px Arial, sans-serif';
+      pinContext.textAlign = 'center';
+      pinContext.textBaseline = 'middle';
       
       // Format the display text
       let displayText = count.toString();
-      if (count >= 1000000) {
-        displayText = (count / 1000000).toFixed(0) + 'M';
-      } else if (count >= 1000) {
-        displayText = (count / 1000).toFixed(0) + 'K';
+      if (count >= 1000) {
+        displayText = Math.floor(count / 1000) + 'k+';
+      } else if (count >= 100) {
+        displayText = Math.floor(count / 10) * 10 + '+';
+      } else {
+        displayText = count + '+';
       }
       
-      // Add text shadow for depth with scaled values
-      numberContext.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      numberContext.shadowBlur = Math.max(1, 3 * distanceScale);
-      numberContext.shadowOffsetX = Math.max(1, 2 * distanceScale);
-      numberContext.shadowOffsetY = Math.max(1, 2 * distanceScale);
+      // Add text shadow for better readability
+      pinContext.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      pinContext.shadowBlur = 3;
+      pinContext.shadowOffsetX = 1;
+      pinContext.shadowOffsetY = 1;
       
-      numberContext.fillText(displayText, numberCanvas.width / 2, numberCanvas.height / 2);
+      pinContext.fillText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
       
-      const numberTexture = new THREE.CanvasTexture(numberCanvas);
-      numberTexture.needsUpdate = true;
-      const numberMaterial = new THREE.SpriteMaterial({ 
-        map: numberTexture,
+      // Create sprite from canvas
+      const pinTexture = new THREE.CanvasTexture(pinCanvas);
+      pinTexture.needsUpdate = true;
+      const pinMaterial = new THREE.SpriteMaterial({ 
+        map: pinTexture,
         transparent: true,
-        depthTest: false, // Always show on top
+        depthTest: false,
         depthWrite: false,
         alphaTest: 0.1
       });
-      const numberSprite = new THREE.Sprite(numberMaterial);
+      const pinSprite = new THREE.Sprite(pinMaterial);
       
-      // Position above the cluster with distance-based scaling
-      // Closer camera = smaller, lower labels; farther camera = larger, higher labels
-      const labelHeight = size * 3.5 * distanceScale;
-      const labelWidth = size * 3 * distanceScale;
-      const labelHeightScale = size * 1.2 * distanceScale;
+      // Scale based on camera distance
+      const pov = globeRef.current?.pointOfView();
+      const altitude = pov?.altitude || 2;
+      const scale = Math.max(0.8, Math.min(3.0, altitude * pinSize));
       
-      numberSprite.position.set(0, labelHeight, 0.2);
-      numberSprite.scale.set(labelWidth, labelHeightScale, 1);
+      pinSprite.scale.set(scale, scale, 1);
+      pinSprite.position.set(0, 0, 0.1);
       
-      group.add(numberSprite);
+      group.add(pinSprite);
     }
     
     // Add targeting box effect if this cluster is selected
     const isTargeted = selectedPoint && selectedPoint.id === cluster.id && selectedPoint.isCluster;
     if (isTargeted) {
-      const targetingBox = createTargetingBox(size * 3);
+      const targetingBox = createTargetingBox(2.0);
       group.add(targetingBox);
     }
     
@@ -582,32 +464,116 @@ export const Earth: React.FC<EarthProps> = ({
 
   const createUserMarker = (user: ClusterFeature) => {
     const group = new THREE.Group();
-    const geometry = new THREE.SphereGeometry(0.3, 16, 16);
     const isHighlighted = highlightedUsers.some(u => u.lat === user.lat && u.lng === user.lng);
     const isSelected = selectedCity && selectedCity.lat === user.lat && selectedCity.lng === user.lng;
     const isTargeted = selectedPoint && selectedPoint.id === user.id && !selectedPoint.isCluster;
     
-    let color = 0xffeb3b; // Yellow for normal users
-    if (isSelected) color = 0xff4444; // Red for selected
-    if (isHighlighted) color = 0x00ff00; // Green for highlighted
+    // Get user count from properties
+    const userCount = user.properties?.users || 1;
     
-    const material = new THREE.MeshBasicMaterial({ color });
-    const sphere = new THREE.Mesh(geometry, material);
-    
-    // Add glow effect
-    const glowMaterial = new THREE.MeshBasicMaterial({ 
-      color, 
-      transparent: true, 
-      opacity: 0.3 
-    });
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), glowMaterial);
-    
-    group.add(sphere);
-    group.add(glow);
+    // Create pin-style marker for individual users
+    const userPinCanvas = document.createElement('canvas');
+    const userPinContext = userPinCanvas.getContext('2d');
+    if (userPinContext) {
+      const canvasSize = 256;
+      userPinCanvas.width = canvasSize;
+      userPinCanvas.height = canvasSize;
+      
+      // Clear canvas
+      userPinContext.clearRect(0, 0, canvasSize, canvasSize);
+      
+      // Determine color based on state
+      let pinColor = '#9C27B0'; // Default purple
+      if (isSelected) pinColor = '#F44336'; // Red for selected
+      if (isHighlighted) pinColor = '#4CAF50'; // Green for highlighted
+      
+      // Draw smaller pin for individual users
+      const pinWidth = 100;
+      const pinHeight = 70;
+      const pinX = (canvasSize - pinWidth) / 2;
+      const pinY = 60;
+      const cornerRadius = 12;
+      const pointerHeight = 20;
+      
+      // Main pin body
+      userPinContext.fillStyle = pinColor;
+      userPinContext.beginPath();
+      userPinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
+      userPinContext.fill();
+      
+      // Pin pointer
+      userPinContext.beginPath();
+      userPinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight);
+      userPinContext.lineTo(pinX + pinWidth / 2 - 12, pinY + pinHeight);
+      userPinContext.lineTo(pinX + pinWidth / 2 + 12, pinY + pinHeight);
+      userPinContext.closePath();
+      userPinContext.fill();
+      
+      // Add border
+      userPinContext.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      userPinContext.lineWidth = 2;
+      userPinContext.beginPath();
+      userPinContext.roundRect(pinX, pinY, pinWidth, pinHeight, cornerRadius);
+      userPinContext.stroke();
+      
+      // Draw pointer border
+      userPinContext.beginPath();
+      userPinContext.moveTo(pinX + pinWidth / 2, pinY + pinHeight + pointerHeight);
+      userPinContext.lineTo(pinX + pinWidth / 2 - 12, pinY + pinHeight);
+      userPinContext.lineTo(pinX + pinWidth / 2 + 12, pinY + pinHeight);
+      userPinContext.closePath();
+      userPinContext.stroke();
+      
+      // Add user count text
+      userPinContext.fillStyle = '#ffffff';
+      userPinContext.font = 'bold 28px Arial, sans-serif';
+      userPinContext.textAlign = 'center';
+      userPinContext.textBaseline = 'middle';
+      
+      // Format user count for display
+      let displayText;
+      if (userCount >= 1000) {
+        displayText = Math.floor(userCount / 1000) + 'k';
+      } else if (userCount >= 100) {
+        displayText = Math.floor(userCount / 100) + '00+';
+      } else {
+        displayText = userCount.toString();
+      }
+      
+      // Add text shadow
+      userPinContext.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      userPinContext.shadowBlur = 2;
+      userPinContext.shadowOffsetX = 1;
+      userPinContext.shadowOffsetY = 1;
+      
+      userPinContext.fillText(displayText, pinX + pinWidth / 2, pinY + pinHeight / 2);
+      
+      // Create sprite
+      const userPinTexture = new THREE.CanvasTexture(userPinCanvas);
+      userPinTexture.needsUpdate = true;
+      const userPinMaterial = new THREE.SpriteMaterial({ 
+        map: userPinTexture,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        alphaTest: 0.1
+      });
+      const userPinSprite = new THREE.Sprite(userPinMaterial);
+      
+      // Scale based on camera distance (slightly smaller than clusters)
+      const pov = globeRef.current?.pointOfView();
+      const altitude = pov?.altitude || 2;
+      const scale = Math.max(0.6, Math.min(2.0, altitude * 0.8));
+      
+      userPinSprite.scale.set(scale, scale, 1);
+      userPinSprite.position.set(0, 0, 0.1);
+      
+      group.add(userPinSprite);
+    }
     
     // Add targeting box effect if selected
     if (isTargeted) {
-      const targetingBox = createTargetingBox(2.0);
+      const targetingBox = createTargetingBox(1.5);
       group.add(targetingBox);
     }
     
@@ -750,93 +716,8 @@ export const Earth: React.FC<EarthProps> = ({
             atmosphereColor="rgba(255, 255, 255, 0.2)"
             atmosphereAltitude={0.1}
             customThreeObject={(d: any) => {
-              const group = new THREE.Group();
-              
-              // Add the main marker (cluster or user)
-              const marker = d.isCluster ? createClusterMarker(d) : createUserMarker(d);
-              group.add(marker);
-              
-              // Create permanent tooltip
-              const tooltipCanvas = document.createElement('canvas');
-              const tooltipContext = tooltipCanvas.getContext('2d');
-              if (tooltipContext) {
-                // Scale tooltip size based on camera distance
-                const pov = globeRef.current?.pointOfView();
-                const altitude = pov?.altitude || 2;
-                const tooltipScale = Math.max(0.6, Math.min(1.8, altitude * 1.2));
-                
-                tooltipCanvas.width = Math.floor(400 * tooltipScale);
-                tooltipCanvas.height = Math.floor((d.isCluster ? 180 : 120) * tooltipScale);
-                
-                // Background with rounded corners
-                tooltipContext.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                tooltipContext.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-                tooltipContext.lineWidth = Math.max(1, 2 * tooltipScale);
-                
-                const cornerRadius = Math.floor(15 * tooltipScale);
-                const width = tooltipCanvas.width - Math.floor(20 * tooltipScale);
-                const height = tooltipCanvas.height - Math.floor(20 * tooltipScale);
-                const x = Math.floor(10 * tooltipScale);
-                const y = Math.floor(10 * tooltipScale);
-                
-                // Draw rounded rectangle
-                tooltipContext.beginPath();
-                tooltipContext.roundRect(x, y, width, height, cornerRadius);
-                tooltipContext.fill();
-                tooltipContext.stroke();
-                
-                // Add text content
-                if (d.isCluster) {
-                  // Cluster tooltip
-                  tooltipContext.fillStyle = '#1f2937';
-                  tooltipContext.font = `bold ${Math.floor(28 * tooltipScale)}px Arial`;
-                  tooltipContext.textAlign = 'center';
-                  tooltipContext.fillText(`${d.count.toLocaleString()} locations`, tooltipCanvas.width / 2, Math.floor(50 * tooltipScale));
-                  
-                  tooltipContext.fillStyle = '#6b7280';
-                  tooltipContext.font = `${Math.floor(22 * tooltipScale)}px Arial`;
-                  tooltipContext.fillText(`${(d.properties?.totalUsers || d.count).toLocaleString()} total users`, tooltipCanvas.width / 2, Math.floor(85 * tooltipScale));
-                  
-                  tooltipContext.fillStyle = '#2563eb';
-                  tooltipContext.font = `${Math.floor(18 * tooltipScale)}px Arial`;
-                  tooltipContext.fillText('Click to zoom in', tooltipCanvas.width / 2, Math.floor(115 * tooltipScale));
-                } else {
-                  // Individual user tooltip
-                  tooltipContext.fillStyle = '#1f2937';
-                  tooltipContext.font = `bold ${Math.floor(24 * tooltipScale)}px Arial`;
-                  tooltipContext.textAlign = 'center';
-                  tooltipContext.fillText(d.properties.city, tooltipCanvas.width / 2, Math.floor(45 * tooltipScale));
-                  
-                  tooltipContext.fillStyle = '#6b7280';
-                  tooltipContext.font = `${Math.floor(20 * tooltipScale)}px Arial`;
-                  tooltipContext.fillText(`${d.properties.users.toLocaleString()} users`, tooltipCanvas.width / 2, Math.floor(75 * tooltipScale));
-                }
-                
-                const tooltipTexture = new THREE.CanvasTexture(tooltipCanvas);
-                const tooltipMaterial = new THREE.SpriteMaterial({ 
-                  map: tooltipTexture,
-                  transparent: true,
-                  depthTest: false,
-                  depthWrite: false
-                });
-                const tooltipSprite = new THREE.Sprite(tooltipMaterial);
-                
-                // Position tooltip above the marker with distance scaling
-                const baseTooltipHeight = d.isCluster ? 4.5 : 3;
-                const baseTooltipWidth = d.isCluster ? 6 : 4.5;
-                const baseTooltipY = d.isCluster ? 5 : 2;
-                
-                const tooltipHeight = baseTooltipHeight * tooltipScale;
-                const tooltipWidth = baseTooltipWidth * tooltipScale;
-                const tooltipY = baseTooltipY * tooltipScale;
-                
-                tooltipSprite.position.set(0, tooltipY, 0.2);
-                tooltipSprite.scale.set(tooltipWidth, tooltipHeight, 1);
-                
-                group.add(tooltipSprite);
-              }
-              
-              return group;
+              // Create the appropriate marker type
+              return d.isCluster ? createClusterMarker(d) : createUserMarker(d);
             }}
             customThreeObjectUpdate={(obj: any, d: any) => {
               obj.position.set(0, 0, 0);
