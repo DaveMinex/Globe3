@@ -1,3 +1,4 @@
+
 import Supercluster from 'supercluster';
 import type { Location } from '../mock/mockLocations';
 
@@ -26,9 +27,10 @@ export function createClusterer(locations: Location[]) {
   }));
 
   const clusterer = new Supercluster({
-    radius: 60, // Medium radius for balanced clustering
-    maxZoom: 18, // Much higher max zoom for granular levels
+    radius: 40, // Cluster radius in pixels - smaller for more granular clustering
+    maxZoom: 16, // Maximum zoom level for clustering
     minZoom: 0,
+    minPoints: 2, // Minimum points to form a cluster
     nodeSize: 64,
     extent: 512,
     reduce: (acc, props) => {
@@ -49,8 +51,8 @@ export function createClusterer(locations: Location[]) {
 export function getClusters(clusterer: Supercluster, bounds: [number, number, number, number], zoom: number): ClusterFeature[] {
   console.log('Getting clusters for zoom:', zoom, 'bounds:', bounds);
 
-  // Use expanded zoom range for more granular clustering levels
-  const effectiveZoom = Math.min(Math.max(zoom, 0), 18);
+  // Clamp zoom to valid range
+  const effectiveZoom = Math.min(Math.max(zoom, 0), 16);
   const clusters = clusterer.getClusters(bounds, Math.round(effectiveZoom));
   console.log('Raw clusters:', clusters.length, 'effective zoom:', effectiveZoom);
 
@@ -74,4 +76,12 @@ export function getClusters(clusterer: Supercluster, bounds: [number, number, nu
       };
     }
   });
+}
+
+export function getClusterExpansionZoom(clusterer: Supercluster, clusterId: number): number {
+  return clusterer.getClusterExpansionZoom(clusterId);
+}
+
+export function getClusterChildren(clusterer: Supercluster, clusterId: number): any[] {
+  return clusterer.getChildren(clusterId);
 }
