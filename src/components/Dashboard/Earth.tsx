@@ -86,19 +86,19 @@ export const Earth: React.FC<EarthProps> = ({
       const currentPOV = globeRef.current.pointOfView();
       const currentAltitude = currentPOV.altitude || 2.5;
 
-      // Calculate new altitude with custom scaling
-      const zoomFactor = delta > 0 ? 1.2 : 0.8;
-      const newAltitude = Math.max(0.2, Math.min(3, currentAltitude * zoomFactor));
+      // Calculate new altitude with much finer scaling
+      const zoomFactor = delta > 0 ? 1.15 : 0.87;
+      const newAltitude = Math.max(0.05, Math.min(5, currentAltitude * zoomFactor));
 
       // Update point of view with custom animation
       globeRef.current.pointOfView({
         ...currentPOV,
         altitude: newAltitude
-      }, 100); // Quick animation
+      }, 50); // Faster animation
 
-      // Calculate zoom level with better mapping
-      const zoomLevel = Math.round(16 * (1 - Math.log(newAltitude) / Math.log(3)));
-      setZoom(Math.max(0, Math.min(16, zoomLevel)));
+      // Calculate zoom level with extended range and better mapping
+      const zoomLevel = Math.round(20 * (1 - Math.log(newAltitude + 0.05) / Math.log(5.05)));
+      setZoom(Math.max(0, Math.min(20, zoomLevel)));
     };
 
     const globeElement = globeRef.current.renderer().domElement;
@@ -135,8 +135,8 @@ export const Earth: React.FC<EarthProps> = ({
 
   // Show clusters at low zoom, individual users at high zoom
   const visiblePoints = clusters.filter(d => {
-    if (d.isCluster) return true;
-    return zoom >= 12; // Only show individual users when very zoomed in
+    if (d.isCluster) return zoom < 15; // Hide clusters when very zoomed in
+    return zoom >= 8; // Show individual users earlier for better granularity
   });
 
   return (
