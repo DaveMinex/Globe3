@@ -421,17 +421,17 @@ export const Earth: React.FC<EarthProps> = ({
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (context) {
-      canvas.width = 256;
-      canvas.height = 256;
-      context.fillStyle = textColor;
+      canvas.width = 512;
+      canvas.height = 512;
       
-      // Adjust font size based on number length
+      // Clear canvas with transparent background
+      context.clearRect(0, 0, 512, 512);
+      
+      // Adjust font size based on number length and cluster size
       const textLength = count.toString().length;
-      let fontSize = 80;
-      if (textLength > 3) fontSize = 60;
-      if (textLength > 4) fontSize = 50;
+      let fontSize = Math.max(60, 120 - textLength * 15);
       
-      context.font = `bold ${fontSize}px Arial`;
+      context.font = `bold ${fontSize}px Arial, sans-serif`;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
       
@@ -443,61 +443,114 @@ export const Earth: React.FC<EarthProps> = ({
         displayText = (count / 1000).toFixed(1) + 'K';
       }
       
-      context.fillText(displayText, 128, 128);
+      // Add text shadow for better visibility
+      context.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      context.shadowBlur = 4;
+      context.shadowOffsetX = 2;
+      context.shadowOffsetY = 2;
+      
+      context.fillStyle = textColor;
+      context.fillText(displayText, 256, 256);
+      
+      // Remove shadow for crisp text
+      context.shadowColor = 'transparent';
+      context.shadowBlur = 0;
+      context.shadowOffsetX = 0;
+      context.shadowOffsetY = 0;
       
       const texture = new THREE.CanvasTexture(canvas);
-      const textMaterial = new THREE.SpriteMaterial({ map: texture });
+      texture.needsUpdate = true;
+      const textMaterial = new THREE.SpriteMaterial({ 
+        map: texture,
+        transparent: true,
+        alphaTest: 0.1
+      });
       const sprite = new THREE.Sprite(textMaterial);
-      sprite.scale.set(size * 1.8, size * 1.8, 1);
+      sprite.scale.set(size * 2.2, size * 2.2, 1);
       group.add(sprite);
     }
 
-    // Create permanent floating number above cluster
+    // Create permanent floating number above cluster with better visibility
     const numberCanvas = document.createElement('canvas');
     const numberContext = numberCanvas.getContext('2d');
     if (numberContext) {
-      numberCanvas.width = 256;
-      numberCanvas.height = 128;
+      numberCanvas.width = 400;
+      numberCanvas.height = 160;
       
-      // Create background for better readability
-      numberContext.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      numberContext.roundRect(10, 10, 236, 108, 15);
+      // Clear canvas
+      numberContext.clearRect(0, 0, 400, 160);
+      
+      // Create rounded background for better readability
+      const bgWidth = 380;
+      const bgHeight = 140;
+      const bgX = 10;
+      const bgY = 10;
+      const cornerRadius = 20;
+      
+      // Background with gradient
+      const gradient = numberContext.createLinearGradient(0, 0, 0, bgHeight);
+      gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
+      gradient.addColorStop(1, 'rgba(30, 30, 30, 0.9)');
+      
+      numberContext.fillStyle = gradient;
+      numberContext.beginPath();
+      numberContext.roundRect(bgX, bgY, bgWidth, bgHeight, cornerRadius);
       numberContext.fill();
       
-      // Add white border
+      // Add glowing border
       numberContext.strokeStyle = '#ffffff';
-      numberContext.lineWidth = 2;
-      numberContext.roundRect(10, 10, 236, 108, 15);
+      numberContext.lineWidth = 3;
+      numberContext.shadowColor = '#ffffff';
+      numberContext.shadowBlur = 10;
+      numberContext.beginPath();
+      numberContext.roundRect(bgX, bgY, bgWidth, bgHeight, cornerRadius);
       numberContext.stroke();
       
-      // Add the count text
+      // Reset shadow for text
+      numberContext.shadowColor = 'transparent';
+      numberContext.shadowBlur = 0;
+      
+      // Add the count text with better formatting
       numberContext.fillStyle = '#ffffff';
-      numberContext.font = 'bold 48px Arial';
+      
+      // Adjust font size based on text length
+      const textLength = count.toString().length;
+      let fontSize = textLength > 4 ? 50 : textLength > 3 ? 60 : 70;
+      
+      numberContext.font = `bold ${fontSize}px Arial, sans-serif`;
       numberContext.textAlign = 'center';
       numberContext.textBaseline = 'middle';
       
       // Format the display text
       let displayText = count.toString();
       if (count >= 1000000) {
-        displayText = (count / 1000000).toFixed(1) + 'M';
+        displayText = (count / 1000000).toFixed(0) + 'M';
       } else if (count >= 1000) {
-        displayText = (count / 1000).toFixed(1) + 'K';
+        displayText = (count / 1000).toFixed(0) + 'K';
       }
       
-      numberContext.fillText(displayText, 128, 64);
+      // Add text shadow for depth
+      numberContext.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      numberContext.shadowBlur = 3;
+      numberContext.shadowOffsetX = 2;
+      numberContext.shadowOffsetY = 2;
+      
+      numberContext.fillText(displayText, 200, 80);
       
       const numberTexture = new THREE.CanvasTexture(numberCanvas);
+      numberTexture.needsUpdate = true;
       const numberMaterial = new THREE.SpriteMaterial({ 
         map: numberTexture,
         transparent: true,
         depthTest: false, // Always show on top
-        depthWrite: false
+        depthWrite: false,
+        alphaTest: 0.1
       });
       const numberSprite = new THREE.Sprite(numberMaterial);
       
-      // Position above the cluster
-      numberSprite.position.set(0, size * 2.5, 0.1);
-      numberSprite.scale.set(size * 2, size * 1, 1);
+      // Position above the cluster with better scaling
+      numberSprite.position.set(0, size * 3.5, 0.2);
+      numberSprite.scale.set(size * 3, size * 1.2, 1);
       
       group.add(numberSprite);
     }
@@ -550,30 +603,30 @@ export const Earth: React.FC<EarthProps> = ({
   const createTargetingBox = (size: number) => {
     const group = new THREE.Group();
     
-    // Create animated green targeting box
+    // Create animated green targeting box with better visibility
     const boxSize = size;
-    const thickness = 0.1;
-    const cornerLength = boxSize * 0.3;
+    const cornerLength = boxSize * 0.4;
+    const lineWidth = 0.15;
     
     // Create corner brackets (4 corners, 2 lines each)
     const corners = [
       // Top-left corner
-      { pos: [-boxSize/2, boxSize/2, 0], lines: [
+      { pos: [-boxSize/2, boxSize/2, 0.5], lines: [
         { start: [0, 0, 0], end: [cornerLength, 0, 0] },
         { start: [0, 0, 0], end: [0, -cornerLength, 0] }
       ]},
       // Top-right corner
-      { pos: [boxSize/2, boxSize/2, 0], lines: [
+      { pos: [boxSize/2, boxSize/2, 0.5], lines: [
         { start: [0, 0, 0], end: [-cornerLength, 0, 0] },
         { start: [0, 0, 0], end: [0, -cornerLength, 0] }
       ]},
       // Bottom-left corner
-      { pos: [-boxSize/2, -boxSize/2, 0], lines: [
+      { pos: [-boxSize/2, -boxSize/2, 0.5], lines: [
         { start: [0, 0, 0], end: [cornerLength, 0, 0] },
         { start: [0, 0, 0], end: [0, cornerLength, 0] }
       ]},
       // Bottom-right corner
-      { pos: [boxSize/2, -boxSize/2, 0], lines: [
+      { pos: [boxSize/2, -boxSize/2, 0.5], lines: [
         { start: [0, 0, 0], end: [-cornerLength, 0, 0] },
         { start: [0, 0, 0], end: [0, cornerLength, 0] }
       ]}
@@ -584,30 +637,51 @@ export const Earth: React.FC<EarthProps> = ({
       cornerGroup.position.set(...corner.pos);
       
       corner.lines.forEach(line => {
-        const points = [
-          new THREE.Vector3(...line.start),
-          new THREE.Vector3(...line.end)
-        ];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({ 
+        // Create thick lines using cylinder geometry for better visibility
+        const start = new THREE.Vector3(...line.start);
+        const end = new THREE.Vector3(...line.end);
+        const distance = start.distanceTo(end);
+        
+        const geometry = new THREE.CylinderGeometry(lineWidth, lineWidth, distance, 8);
+        const material = new THREE.MeshBasicMaterial({ 
           color: 0x00ff00, // Bright green
-          linewidth: 3,
           transparent: true,
-          opacity: 0.9
+          opacity: 1.0,
+          emissive: 0x004400 // Add glow effect
         });
-        const lineSegment = new THREE.Line(geometry, material);
-        cornerGroup.add(lineSegment);
+        
+        const cylinder = new THREE.Mesh(geometry, material);
+        
+        // Position and orient the cylinder
+        const direction = new THREE.Vector3().subVectors(end, start);
+        cylinder.position.copy(start.clone().add(direction.clone().multiplyScalar(0.5)));
+        cylinder.lookAt(end);
+        cylinder.rotateX(Math.PI / 2);
+        
+        cornerGroup.add(cylinder);
       });
       
       group.add(cornerGroup);
     });
     
+    // Add outer glow ring
+    const ringGeometry = new THREE.RingGeometry(boxSize * 0.8, boxSize * 0.9, 32);
+    const ringMaterial = new THREE.MeshBasicMaterial({ 
+      color: 0x00ff00,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.position.z = 0.3;
+    group.add(ring);
+    
     // Add pulsing animation
-    const scale = 1 + Math.sin(Date.now() * 0.005) * 0.1;
+    const scale = 1 + Math.sin(Date.now() * 0.008) * 0.15;
     group.scale.set(scale, scale, scale);
     
     // Add rotation animation
-    group.rotation.z = Date.now() * 0.001;
+    group.rotation.z = Date.now() * 0.002;
     
     // Mark this as a targeting box for animation updates
     group.userData = { isTargetingBox: true };
@@ -746,11 +820,13 @@ export const Earth: React.FC<EarthProps> = ({
               if (isTargeted) {
                 // Find and update the targeting box animation
                 obj.children.forEach((child: any) => {
-                  if (child.userData && child.userData.isTargetingBox) {
-                    const scale = 1 + Math.sin(Date.now() * 0.005) * 0.1;
-                    child.scale.set(scale, scale, scale);
-                    child.rotation.z = Date.now() * 0.001;
-                  }
+                  child.children?.forEach((subChild: any) => {
+                    if (subChild.userData && subChild.userData.isTargetingBox) {
+                      const scale = 1 + Math.sin(Date.now() * 0.008) * 0.15;
+                      subChild.scale.set(scale, scale, scale);
+                      subChild.rotation.z = Date.now() * 0.002;
+                    }
+                  });
                 });
               }
             }}
